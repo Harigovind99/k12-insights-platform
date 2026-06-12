@@ -49,8 +49,10 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1e293b; ov
 .sidebar-collapsed .logo-text { display: none; }
 .sidebar-collapsed .user-info { display: none; }
 .sidebar-collapsed .sidebar-toggle-label { display: none; }
-.kpi-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; transition: box-shadow 0.2s; }
+.kpi-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; transition: box-shadow 0.2s, background 0.3s; }
 .kpi-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.kpi-flash { animation: kpiFlash 0.5s ease-out; }
+@keyframes kpiFlash { 0% { background: #fefce8; } 100% { background: #fff; } }
 select, input[type="text"], input[type="search"] { font-size: 13px; }
 .risk-pill { padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-block; }
 .risk-low { background: #d1fae5; color: #047857; }
@@ -59,12 +61,15 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
 .risk-chronic { background: #fee2e2; color: #dc2626; }
 .heatmap-cell { transition: opacity 0.15s; }
 .heatmap-cell:hover { opacity: 0.8; stroke: #1e293b; stroke-width: 2; }
-.gantt-bar { rx: 4; ry: 4; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.25s ease-out; }
 .chart-bar:hover { opacity: 0.85; }
 .filter-select { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 28px 6px 10px; font-size: 13px; color: #1e293b; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; cursor: pointer; min-width: 120px; }
 .filter-select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.loading-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; animation: ldot 0.6s infinite alternate; }
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ldot { to { opacity: 0.2; transform: translateY(-4px); } }
 </style>
 </head>
 <body data-id="0">
@@ -74,14 +79,12 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
   <!-- LEFT SIDEBAR -->
   <aside data-id="3" id="sidebar" class="flex flex-col h-full bg-navy text-white transition-all duration-200" style="width:220px; min-width:220px;">
     <div data-id="4" class="sidebar-inner flex flex-col h-full">
-      <!-- Logo -->
       <div data-id="5" class="flex items-center gap-2 px-4 py-4 border-b border-white/10">
         <div data-id="6" class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center flex-shrink-0">
           <i data-id="7" data-lucide="bar-chart-3" class="w-4 h-4 text-white"></i>
         </div>
         <span data-id="8" class="logo-text text-sm font-bold tracking-tight">EduInsights</span>
       </div>
-      <!-- Nav -->
       <nav data-id="9" class="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 space-y-1" id="sidebar-nav">
         <div data-id="10" class="nav-item" data-nav="home"><i data-id="11" data-lucide="home" class="w-4 h-4 flex-shrink-0"></i><span data-id="12" class="nav-label">Home</span></div>
         <div data-id="13" class="nav-item" data-nav="assessments-nav"><i data-id="14" data-lucide="file-check" class="w-4 h-4 flex-shrink-0"></i><span data-id="15" class="nav-label">Assessments</span></div>
@@ -100,11 +103,9 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
         <div data-id="52" class="nav-item" data-nav="settings"><i data-id="53" data-lucide="settings" class="w-4 h-4 flex-shrink-0"></i><span data-id="54" class="nav-label">Settings</span></div>
         <div data-id="55" class="nav-item" data-nav="diagnostics"><i data-id="56" data-lucide="activity" class="w-4 h-4 flex-shrink-0"></i><span data-id="57" class="nav-label">Diagnostics</span></div>
       </nav>
-      <!-- Sidebar Toggle -->
       <div data-id="58" class="px-3 py-2 border-t border-white/10">
         <div data-id="59" class="nav-item" id="sidebar-toggle"><i data-id="60" data-lucide="panel-left-close" class="w-4 h-4 flex-shrink-0"></i><span data-id="61" class="sidebar-toggle-label nav-label text-xs">Collapse</span></div>
       </div>
-      <!-- User -->
       <div data-id="62" class="px-4 py-3 border-t border-white/10 flex items-center gap-3">
         <div data-id="63" class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-xs font-bold flex-shrink-0">HA</div>
         <div data-id="64" class="user-info min-w-0">
@@ -117,10 +118,8 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
 
   <!-- MAIN -->
   <div data-id="67" class="flex-1 flex flex-col min-w-0 h-full">
-    <!-- TOP BAR -->
     <header data-id="68" class="bg-white border-b border-surface-border flex flex-col flex-shrink-0" style="z-index:40;">
       <div data-id="69" class="flex items-center justify-between px-4 h-14">
-        <!-- Breadcrumb -->
         <div data-id="70" class="flex items-center gap-1 text-xs text-txt-muted">
           <span data-id="71" class="text-brand-500 font-medium">Insights</span>
           <i data-id="72" data-lucide="chevron-right" class="w-3 h-3"></i>
@@ -128,9 +127,7 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
           <i data-id="74" data-lucide="chevron-right" class="w-3 h-3"></i>
           <span data-id="75" id="breadcrumb-sub" class="text-txt-primary font-medium">Overview</span>
         </div>
-        <!-- Right actions -->
         <div data-id="76" class="flex items-center gap-3">
-          <!-- Role Switcher -->
           <select data-id="77" id="role-switcher" class="filter-select text-xs" style="min-width:140px;">
             <option data-id="78" value="district-admin">District Admin</option>
             <option data-id="79" value="school-admin">School Admin</option>
@@ -143,138 +140,161 @@ select, input[type="text"], input[type="search"] { font-size: 13px; }
           <div data-id="88" class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">HA</div>
         </div>
       </div>
-      <!-- Insight Domain Tabs -->
-      <div data-id="89" class="flex overflow-x-auto tab-scroll border-t border-surface-border px-2" id="domain-tabs">
-        <!-- Tabs rendered by JS -->
-      </div>
+      <div data-id="89" class="flex overflow-x-auto tab-scroll border-t border-surface-border px-2" id="domain-tabs"></div>
     </header>
 
-    <!-- Role Banner -->
     <div data-id="90" id="role-banner" class="hidden bg-brand-50 border-b border-brand-200 px-4 py-2 text-xs text-brand-700 font-medium flex items-center gap-2">
       <i data-id="91" data-lucide="eye" class="w-3 h-3"></i>
       <span data-id="92" id="role-banner-text"></span>
     </div>
 
-    <!-- CONTENT AREA -->
-    <main data-id="93" id="main-content" class="flex-1 overflow-y-auto scrollbar-thin">
-      <!-- Dynamic content rendered by JS -->
-    </main>
+    <main data-id="93" id="main-content" class="flex-1 overflow-y-auto scrollbar-thin"></main>
   </div>
 </div>
 
-<!-- Global Tooltip -->
 <div data-id="94" id="global-tooltip" class="tooltip-box" style="display:none;"></div>
 
-<!-- Schema Modal -->
 <div data-id="95" id="schema-modal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center" style="z-index:100;">
   <div data-id="96" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col mx-4">
     <div data-id="97" class="flex items-center justify-between px-6 py-4 border-b border-surface-border">
       <h2 data-id="98" class="text-lg font-bold text-txt-primary">Data Model & Schema</h2>
       <button data-id="99" id="schema-close" class="p-2 rounded-lg hover:bg-gray-100"><i data-id="100" data-lucide="x" class="w-5 h-5 text-txt-muted"></i></button>
     </div>
-    <div data-id="101" class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin" id="schema-body">
-    </div>
+    <div data-id="101" class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin" id="schema-body"></div>
   </div>
 </div>
 
 <script>
-// ===================== DATA =====================
-const SCHOOLS = ['Jefferson Elementary','Lincoln Middle','Washington High','Roosevelt K-8','Adams Elementary'];
-const GRADES = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
-const STUDENT_GROUPS = ['All','English Learners','Special Education','Socioeconomically Disadvantaged','Foster Youth','Homeless','Gifted','504'];
+// ===================== DETERMINISTIC SEED HELPERS =====================
+function seededVal(seed, min, max) {
+  const x = ((seed * 2654435761) >>> 0) % 10000;
+  return min + (x / 10000) * (max - min);
+}
+function seededInt(seed, min, max) {
+  return Math.floor(seededVal(seed, min, max + 0.999));
+}
+function seededPick(seed, arr) {
+  return arr[seededInt(seed, 0, arr.length - 1)];
+}
 
+// ===================== SYNTHETIC DATA GENERATION =====================
+const SCHOOLS = ['Jefferson Elementary','Lincoln Middle','Washington High','Roosevelt K-8','Adams Elementary'];
+const GRADES_ALL = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
+const MONTHS_ALL = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+const STUDENT_GROUPS = ['General','English Learners','Special Education','Socioeconomically Disadvantaged','Foster Youth','Homeless','Gifted','504'];
+const COUNSELORS = ['Dr. Rivera','Ms. Chen','Mr. Johnson','Ms. Park','Dr. Adams'];
+const INTERVENTION_STATUSES = ['None','Active','Pending','Completed'];
+
+const FIRST_NAMES = ['Aaliyah','Marcus','Sofia','James','Destiny','Ethan','Isabella','Noah','Amara','Liam','Priya','Tyler','Zoe','Caleb','Maya','Oliver','Chloe','Aiden','Luna','Jackson','Ella','Lucas','Mia','Owen','Aria','Leo','Layla','Mateo','Nora','Elijah','Avery','Daniel','Scarlett','Henry','Lily','Samuel','Grace','Carter','Hazel','Jayden','Violet','Wyatt','Stella','Gabriel','Penelope','Julian','Riley','Grayson','Zoey','Levi'];
+const LAST_NAMES = ['Johnson','Williams','Martinez','Chen','Brown','Davis','Thompson','Garcia','Washington','Rodriguez','Patel','Jackson','Anderson','Taylor','Thomas','Moore','Martin','Lee','Harris','Clark','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Hill','Green','Adams','Baker','Nelson','Carter','Mitchell','Perez','Roberts','Turner','Phillips'];
+
+const SCHOOL_GRADES = {
+  'Jefferson Elementary': ['K','1','2','3','4','5'],
+  'Lincoln Middle': ['6','7','8'],
+  'Washington High': ['9','10','11','12'],
+  'Roosevelt K-8': ['K','1','2','3','4','5','6','7','8'],
+  'Adams Elementary': ['K','1','2','3','4','5']
+};
+
+const GROUP_ABSENCE_RANGE = {
+  'General': [0, 12], 'English Learners': [10, 20], 'Special Education': [14, 28],
+  'Socioeconomically Disadvantaged': [8, 16], 'Foster Youth': [25, 40], 'Homeless': [20, 38],
+  'Gifted': [0, 8], '504': [0, 8]
+};
+
+const SCHOOL_ABSENCE_BASE = {
+  'Jefferson Elementary': [3, 5], 'Lincoln Middle': [6, 9], 'Washington High': [8, 14],
+  'Roosevelt K-8': [4, 7], 'Adams Elementary': [3, 5]
+};
+
+const GROUP_WEIGHTS = { 'General':40, 'English Learners':12, 'Special Education':10, 'Socioeconomically Disadvantaged':15, 'Foster Youth':4, 'Homeless':3, 'Gifted':9, '504':7 };
+const ABSENCE_TYPE_WEIGHTS = [42, 35, 23]; // Excused, Unexcused, Tardy
+
+function monthToQuarter(m) {
+  const qi = { 'Aug':'Q1','Sep':'Q1','Oct':'Q1','Nov':'Q2','Dec':'Q2','Jan':'Q2','Feb':'Q3','Mar':'Q3','Apr':'Q3','May':'Q4','Jun':'Q4' };
+  return qi[m] || 'Q1';
+}
+
+function riskFromDays(d) {
+  if (d === 0) return 'Low';
+  if (d <= 8) return 'Low';
+  if (d <= 17) return 'At-Risk';
+  if (d <= 35) return 'Moderate';
+  return 'Chronic';
+}
+
+function generateStudents() {
+  const students = [];
+  const groupKeys = Object.keys(GROUP_WEIGHTS);
+  const groupCum = [];
+  let cum = 0;
+  groupKeys.forEach(g => { cum += GROUP_WEIGHTS[g]; groupCum.push(cum); });
+
+  for (let i = 0; i < 500; i++) {
+    const seed1 = i * 7 + 31;
+    const seed2 = i * 13 + 47;
+    const seed3 = i * 17 + 61;
+    const seed4 = i * 23 + 79;
+    const seed5 = i * 29 + 97;
+    const seed6 = i * 37 + 113;
+    const seed7 = i * 41 + 127;
+    const seed8 = i * 43 + 139;
+
+    const schoolIdx = seededInt(seed1, 0, 4);
+    const school = SCHOOLS[schoolIdx];
+    const possibleGrades = SCHOOL_GRADES[school];
+    const grade = seededPick(seed2, possibleGrades);
+
+    // Pick group deterministically
+    const groupRoll = seededInt(seed3, 0, cum - 1);
+    let group = 'General';
+    for (let g = 0; g < groupCum.length; g++) {
+      if (groupRoll < groupCum[g]) { group = groupKeys[g]; break; }
+    }
+
+    // Days absent: blend school base + group range
+    const [sMin, sMax] = SCHOOL_ABSENCE_BASE[school];
+    const [gMin, gMax] = GROUP_ABSENCE_RANGE[group];
+    const blendMin = Math.max(0, Math.round((sMin + gMin) / 2));
+    const blendMax = Math.min(40, Math.round((sMax + gMax) / 2));
+    const daysAbsent = seededInt(seed4, blendMin, blendMax);
+    const daysPresent = 180 - daysAbsent;
+    const attendanceRate = parseFloat(((daysPresent / 180) * 100).toFixed(1));
+
+    // Absence type
+    const typeRoll = seededInt(seed5, 0, 99);
+    const absenceType = typeRoll < 42 ? 'Excused' : typeRoll < 77 ? 'Unexcused' : 'Tardy';
+
+    const month = seededPick(seed6, MONTHS_ALL);
+    const quarter = monthToQuarter(month);
+    const riskLevel = riskFromDays(daysAbsent);
+
+    const interventionSeed = seed7;
+    let interventionStatus = 'None';
+    if (riskLevel === 'Chronic') interventionStatus = seededPick(interventionSeed, ['Active','Active','Pending','Completed']);
+    else if (riskLevel === 'Moderate') interventionStatus = seededPick(interventionSeed, ['Active','Pending','None','None']);
+    else if (riskLevel === 'At-Risk') interventionStatus = seededPick(interventionSeed, ['None','None','Pending','Active']);
+
+    const counselor = seededPick(seed8, COUNSELORS);
+    const firstName = seededPick(i * 3 + 5, FIRST_NAMES);
+    const lastName = seededPick(i * 5 + 3, LAST_NAMES);
+
+    students.push({
+      id: 'STU-' + String(10000 + i).padStart(5, '0'),
+      name: firstName + ' ' + lastName,
+      school, grade, group, month, absenceType,
+      daysAbsent, daysPresent, attendanceRate, riskLevel,
+      interventionStatus, counselor, quarter
+    });
+  }
+  return students;
+}
+
+const ALL_STUDENTS = generateStudents();
+
+// ===================== DOMAIN TABS =====================
 const DOMAIN_TABS = [
   'Strategic Plan','Accountability','Climate & Culture','School Improvement','Early Warning','MTSS/RTI','Whole Child','Well-being','Assessments','Academics','Attendance','Behavior & Discipline','Graduation Readiness','College Career Life','Portrait of a Graduate','Community Engagement','Family Engagement','Safety','Enrollment','IDEA','EdTech Impact','Finance','Staff','Custom'
-];
-const IMPLEMENTED_TABS = ['Attendance','Assessments','Early Warning','Academics'];
-
-const ATTENDANCE_BY_SCHOOL = [
-  { school:'Jefferson Elementary', present:96.1, excused:1.8, unexcused:1.4, tardy:0.7 },
-  { school:'Lincoln Middle', present:93.4, excused:2.1, unexcused:2.8, tardy:1.7 },
-  { school:'Washington High', present:91.2, excused:2.4, unexcused:4.1, tardy:2.3 },
-  { school:'Roosevelt K-8', present:94.8, excused:2.0, unexcused:1.9, tardy:1.3 },
-  { school:'Adams Elementary', present:95.6, excused:1.6, unexcused:1.5, tardy:1.3 }
-];
-
-const ABSENCE_BY_TYPE = [
-  { label:'Excused', pct:42, count:5396, color:'#3b82f6' },
-  { label:'Unexcused', pct:35, count:4496, color:'#ef4444' },
-  { label:'Tardy', pct:14, count:1799, color:'#8b5cf6' },
-  { label:'Early Dismissal', pct:9, count:1156, color:'#f59e0b' }
-];
-
-const ABSENCE_BY_DOW = [
-  { day:'Mon', count:2840 }, { day:'Tue', count:1920 }, { day:'Wed', count:1760 }, { day:'Thu', count:1890 }, { day:'Fri', count:3210 }
-];
-
-const MONTHLY_TREND = [
-  { m:'Aug', cur:95.1, prev:94.2 }, { m:'Sep', cur:94.8, prev:93.9 }, { m:'Oct', cur:94.2, prev:93.5 },
-  { m:'Nov', cur:93.8, prev:93.1 }, { m:'Dec', cur:92.1, prev:91.8 }, { m:'Jan', cur:94.5, prev:93.8 },
-  { m:'Feb', cur:94.9, prev:94.1 }, { m:'Mar', cur:95.3, prev:94.6 }, { m:'Apr', cur:95.7, prev:95.0 },
-  { m:'May', cur:94.1, prev:93.7 }, { m:'Jun', cur:93.2, prev:92.8 }
-];
-
-const STUDENTS_DATA = [
-  { id:'STU-10421', name:'Aaliyah Johnson', school:'Jefferson Elementary', grade:'3', present:168, excAbsent:4, unexAbsent:2, tardies:3, rate:96.6, risk:'Low' },
-  { id:'STU-10533', name:'Marcus Williams', school:'Lincoln Middle', grade:'7', present:152, excAbsent:8, unexAbsent:12, tardies:7, rate:87.4, risk:'At-Risk' },
-  { id:'STU-10678', name:'Sofia Martinez', school:'Washington High', grade:'10', present:140, excAbsent:6, unexAbsent:22, tardies:12, rate:80.5, risk:'Chronic' },
-  { id:'STU-10712', name:'James Chen', school:'Adams Elementary', grade:'2', present:172, excAbsent:2, unexAbsent:1, tardies:1, rate:98.9, risk:'Low' },
-  { id:'STU-10845', name:'Destiny Brown', school:'Roosevelt K-8', grade:'5', present:158, excAbsent:7, unexAbsent:9, tardies:5, rate:90.8, risk:'Moderate' },
-  { id:'STU-10901', name:'Ethan Davis', school:'Lincoln Middle', grade:'6', present:164, excAbsent:5, unexAbsent:4, tardies:4, rate:94.3, risk:'Low' },
-  { id:'STU-11023', name:'Isabella Thompson', school:'Washington High', grade:'11', present:148, excAbsent:10, unexAbsent:14, tardies:8, rate:85.1, risk:'At-Risk' },
-  { id:'STU-11134', name:'Noah Garcia', school:'Jefferson Elementary', grade:'K', present:170, excAbsent:3, unexAbsent:2, tardies:2, rate:97.7, risk:'Low' },
-  { id:'STU-11256', name:'Amara Washington', school:'Roosevelt K-8', grade:'8', present:144, excAbsent:9, unexAbsent:18, tardies:10, rate:82.8, risk:'Chronic' },
-  { id:'STU-11378', name:'Liam Rodriguez', school:'Adams Elementary', grade:'4', present:162, excAbsent:6, unexAbsent:5, tardies:4, rate:93.1, risk:'At-Risk' }
-];
-
-const RISK_MATRIX = [
-  [2840,187,42,11],
-  [203,412,98,28],
-  [67,134,289,88],
-  [18,41,112,398]
-];
-const RISK_LABELS = ['Low','At-Risk','Moderate','Chronic'];
-
-const QUARTERLY_CHRONIC = [
-  { school:'Jefferson Elementary', q:[3.2,3.8,4.1,3.9], color:'#3b82f6' },
-  { school:'Lincoln Middle', q:[7.4,8.1,8.8,8.2], color:'#10b981' },
-  { school:'Washington High', q:[11.2,12.4,13.1,12.8], color:'#ef4444' },
-  { school:'Roosevelt K-8', q:[5.8,6.2,6.9,6.4], color:'#8b5cf6' },
-  { school:'Adams Elementary', q:[4.1,4.5,4.8,4.3], color:'#f59e0b' }
-];
-
-const RISK_BY_GRADE = [
-  { g:'K', atRisk:42, chronic:12 },{ g:'1', atRisk:48, chronic:15 },{ g:'2', atRisk:51, chronic:18 },
-  { g:'3', atRisk:55, chronic:21 },{ g:'4', atRisk:62, chronic:28 },{ g:'5', atRisk:68, chronic:32 },
-  { g:'6', atRisk:82, chronic:41 },{ g:'7', atRisk:91, chronic:48 },{ g:'8', atRisk:87, chronic:45 },
-  { g:'9', atRisk:104, chronic:56 },{ g:'10', atRisk:98, chronic:52 },{ g:'11', atRisk:88, chronic:44 },
-  { g:'12', atRisk:76, chronic:38 }
-];
-
-const CHRONIC_BY_GROUP = [
-  { group:'All Students', rate:8.7 },{ group:'English Learners', rate:14.2 },{ group:'Special Education', rate:18.4 },
-  { group:'Socioec. Disadvantaged', rate:12.8 },{ group:'Foster Youth', rate:31.4 },{ group:'Homeless', rate:28.9 },
-  { group:'Hispanic/Latino', rate:11.2 },{ group:'African American', rate:13.7 },{ group:'White', rate:5.4 },{ group:'Asian', rate:4.1 }
-];
-
-const CHRONIC_HEATMAP = [
-  { school:'Jefferson Elem.', data:[2.8,3.1,3.4,3.9,4.2,4.5,4.1,3.8,3.2,3.0,2.9] },
-  { school:'Lincoln Middle', data:[6.2,6.8,7.4,8.1,9.2,8.8,8.4,7.9,7.2,6.8,6.4] },
-  { school:'Washington High', data:[9.8,10.4,11.2,12.1,14.2,13.1,12.4,11.8,10.9,10.2,9.6] },
-  { school:'Roosevelt K-8', data:[4.8,5.2,5.8,6.4,7.1,6.9,6.2,5.8,5.2,4.8,4.5] },
-  { school:'Adams Elem.', data:[3.2,3.5,3.8,4.2,4.8,4.5,4.2,3.9,3.5,3.2,3.0] }
-];
-const MONTHS_SHORT = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
-
-const INTERVENTION_STUDENTS = [
-  { name:'Sofia Martinez', school:'Washington High', grade:'10', absent:28, rate:80.5, risk:'Chronic', counselor:'Dr. Rivera', status:'Active', lastContact:'Jun 08, 2025', notes:'Weekly check-ins scheduled' },
-  { name:'Amara Washington', school:'Roosevelt K-8', grade:'8', absent:27, rate:82.8, risk:'Chronic', counselor:'Ms. Chen', status:'Active', lastContact:'Jun 05, 2025', notes:'Parent meeting completed' },
-  { name:'Marcus Williams', school:'Lincoln Middle', grade:'7', absent:20, rate:87.4, risk:'At-Risk', counselor:'Mr. Johnson', status:'Active', lastContact:'Jun 09, 2025', notes:'Mentoring program enrolled' },
-  { name:'Isabella Thompson', school:'Washington High', grade:'11', absent:24, rate:85.1, risk:'At-Risk', counselor:'Dr. Rivera', status:'Pending', lastContact:'Jun 02, 2025', notes:'Awaiting parent consent' },
-  { name:'Destiny Brown', school:'Roosevelt K-8', grade:'5', absent:16, rate:90.8, risk:'Moderate', counselor:'Ms. Park', status:'Active', lastContact:'Jun 10, 2025', notes:'Attendance contract signed' },
-  { name:'Liam Rodriguez', school:'Adams Elementary', grade:'4', absent:11, rate:93.1, risk:'At-Risk', counselor:'Ms. Park', status:'None', lastContact:'—', notes:'To be assigned' },
-  { name:'Tyler Jackson', school:'Lincoln Middle', grade:'8', absent:31, rate:78.2, risk:'Chronic', counselor:'Mr. Johnson', status:'Active', lastContact:'Jun 07, 2025', notes:'Transportation assistance' },
-  { name:'Priya Patel', school:'Washington High', grade:'9', absent:19, rate:89.1, risk:'Moderate', counselor:'Dr. Rivera', status:'Pending', lastContact:'May 28, 2025', notes:'Health accommodations review' }
 ];
 
 // ===================== STATE =====================
@@ -285,14 +305,29 @@ let state = {
   role: 'district-admin',
   sortCol: null,
   sortDir: 'asc',
-  searchQuery: '',
   studentPage: 1
 };
+
+let filters = {
+  schoolYear: '2024-25',
+  school: 'All',
+  grade: 'All',
+  group: 'All',
+  absenceType: 'All',
+  month: 'All',
+  quarter: 'All',
+  riskLevel: 'All',
+  threshold: '10',
+  interventionStatus: 'All',
+  search: ''
+};
+
+let prevKPIs = {};
 
 // ===================== HELPERS =====================
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
-const tooltip = $('#global-tooltip');
+const tooltip = document.getElementById('global-tooltip');
 
 function showTooltip(e, html) {
   tooltip.innerHTML = html;
@@ -307,13 +342,10 @@ function showTooltip(e, html) {
   tooltip.style.top = y + 'px';
 }
 function hideTooltip() { tooltip.style.display = 'none'; }
-
 function num(n) { return n.toLocaleString(); }
 function pct(n) { return n.toFixed(1) + '%'; }
-
 function riskClass(r) {
-  const m = { 'Low':'risk-low','At-Risk':'risk-atrisk','Moderate':'risk-moderate','Chronic':'risk-chronic' };
-  return m[r] || 'risk-low';
+  return { 'Low':'risk-low','At-Risk':'risk-atrisk','Moderate':'risk-moderate','Chronic':'risk-chronic' }[r] || 'risk-low';
 }
 
 function downloadCSV(filename, headers, rows) {
@@ -326,327 +358,46 @@ function downloadCSV(filename, headers, rows) {
   URL.revokeObjectURL(url);
 }
 
+function refreshIcons() {
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+}
+
+// ===================== KPI ANIMATION =====================
+function animateNumber(el, start, end, isPercent, suffix, duration) {
+  duration = duration || 400;
+  suffix = suffix || '';
+  const startTime = performance.now();
+  function tick(now) {
+    const progress = Math.min(1, (now - startTime) / duration);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = start + (end - start) * ease;
+    if (isPercent) {
+      el.textContent = current.toFixed(1) + '%';
+    } else {
+      el.textContent = Math.round(current).toLocaleString() + suffix;
+    }
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function flashKPI(el) {
+  const card = el.closest('.kpi-card');
+  if (card) {
+    card.classList.remove('kpi-flash');
+    void card.offsetWidth;
+    card.classList.add('kpi-flash');
+  }
+}
+
 // ===================== SVG CHART HELPERS =====================
-function svgEl(tag, attrs={}, text='') {
+function svgEl(tag, attrs, text) {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  if (attrs) for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
   if (text) el.textContent = text;
   return el;
-}
-
-function createStackedHBar(container, data, w=540, h=220) {
-  const margin = { t:10, r:20, b:40, l:140 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const barH = Math.min(28, ch / data.length - 6);
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-
-  data.forEach((d, i) => {
-    const y = margin.t + i * (ch / data.length) + (ch / data.length - barH) / 2;
-    // Label
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+barH/2+4, fill:'#64748b', 'font-size':'11', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.school.length > 18 ? d.school.substring(0,16)+'…' : d.school));
-    // Stacked bars
-    const segs = [
-      { val:d.present, color:'#3b82f6', label:'Present' },
-      { val:d.excused, color:'#f59e0b', label:'Excused' },
-      { val:d.unexcused, color:'#ef4444', label:'Unexcused' },
-      { val:d.tardy, color:'#8b5cf6', label:'Tardy' }
-    ];
-    let cx = margin.l;
-    segs.forEach(s => {
-      const bw = (s.val / 100) * cw;
-      const rect = svgEl('rect', { x:cx, y:y, width:Math.max(0,bw), height:barH, fill:s.color, class:'chart-bar', 'data-tip': `${d.school}\n${s.label}: ${pct(s.val)}` });
-      svg.appendChild(rect);
-      cx += bw;
-    });
-  });
-
-  // X axis
-  for (let i = 0; i <= 4; i++) {
-    const x = margin.l + (i/4)*cw;
-    svg.appendChild(svgEl('line', { x1:x, y1:margin.t, x2:x, y2:h-margin.b, stroke:'#e2e8f0', 'stroke-width':'1' }));
-    svg.appendChild(svgEl('text', { x:x, y:h-margin.b+16, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, (i*25)+'%'));
-  }
-
-  container.innerHTML = '';
-  container.appendChild(svg);
-
-  // Legend
-  const legend = document.createElement('div');
-  legend.className = 'flex flex-wrap gap-4 mt-3 justify-center';
-  [{ l:'Present', c:'#3b82f6' },{ l:'Excused', c:'#f59e0b' },{ l:'Unexcused', c:'#ef4444' },{ l:'Tardy', c:'#8b5cf6' }].forEach(s => {
-    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${s.c}"></div>${s.l}</div>`;
-  });
-  container.appendChild(legend);
-  attachChartTooltips(container);
-}
-
-function createDonut(container, data, centerText, w=280, h=280) {
-  const cx = w/2, cy = h/2, r = 90, inner = 55;
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full max-w-[280px] mx-auto' });
-  let startAngle = -90;
-  data.forEach(d => {
-    const angle = (d.pct / 100) * 360;
-    const endAngle = startAngle + angle;
-    const largeArc = angle > 180 ? 1 : 0;
-    const x1 = cx + r * Math.cos(startAngle * Math.PI / 180);
-    const y1 = cy + r * Math.sin(startAngle * Math.PI / 180);
-    const x2 = cx + r * Math.cos(endAngle * Math.PI / 180);
-    const y2 = cy + r * Math.sin(endAngle * Math.PI / 180);
-    const ix1 = cx + inner * Math.cos(endAngle * Math.PI / 180);
-    const iy1 = cy + inner * Math.sin(endAngle * Math.PI / 180);
-    const ix2 = cx + inner * Math.cos(startAngle * Math.PI / 180);
-    const iy2 = cy + inner * Math.sin(startAngle * Math.PI / 180);
-    const path = `M${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} L${ix1},${iy1} A${inner},${inner} 0 ${largeArc},0 ${ix2},${iy2} Z`;
-    const p = svgEl('path', { d:path, fill:d.color, class:'chart-bar', 'data-tip':`${d.label}\n${num(d.count)} (${d.pct}%)` });
-    svg.appendChild(p);
-    startAngle = endAngle;
-  });
-  // Center text
-  svg.appendChild(svgEl('text', { x:cx, y:cy-6, fill:'#1e293b', 'font-size':'22', 'font-weight':'700', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, centerText));
-  svg.appendChild(svgEl('text', { x:cx, y:cy+14, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, 'Total Absences'));
-
-  container.innerHTML = '';
-  container.appendChild(svg);
-  const legend = document.createElement('div');
-  legend.className = 'flex flex-wrap gap-3 mt-3 justify-center';
-  data.forEach(d => {
-    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${d.color}"></div>${d.label} (${d.pct}%)</div>`;
-  });
-  container.appendChild(legend);
-  attachChartTooltips(container);
-}
-
-function createVerticalBar(container, data, w=520, h=260, highlightFri=true) {
-  const margin = { t:10, r:20, b:40, l:50 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const maxVal = Math.max(...data.map(d=>d.count)) * 1.15;
-  const barW = Math.min(48, cw / data.length - 12);
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-  const total = data.reduce((s,d)=>s+d.count,0);
-
-  // Grid
-  for (let i = 0; i <= 4; i++) {
-    const y = margin.t + (i/4)*ch;
-    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, num(Math.round(maxVal*(1-i/4)))));
-  }
-
-  data.forEach((d, i) => {
-    const x = margin.l + i*(cw/data.length) + (cw/data.length - barW)/2;
-    const barH = (d.count / maxVal) * ch;
-    const y = margin.t + ch - barH;
-    const color = (highlightFri && d.day === 'Fri') ? '#ef4444' : '#3b82f6';
-    svg.appendChild(svgEl('rect', { x:x, y:y, width:barW, height:barH, fill:color, rx:'2', class:'chart-bar', 'data-tip':`${d.day}: ${num(d.count)} absences\n${pct(d.count/total*100)} of weekly total` }));
-    svg.appendChild(svgEl('text', { x:x+barW/2, y:h-margin.b+16, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, d.day));
-  });
-
-  container.innerHTML = '';
-  container.appendChild(svg);
-  const note = document.createElement('div');
-  note.className = 'text-xs text-danger-500 font-medium mt-2 text-center';
-  note.textContent = 'Fridays account for 26% of all absences';
-  container.appendChild(note);
-  attachChartTooltips(container);
-}
-
-function createLineChart(container, data, w=540, h=280) {
-  const margin = { t:20, r:30, b:40, l:45 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const yMin = 88, yMax = 98;
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-
-  // Grid
-  for (let i = 0; i <= 5; i++) {
-    const y = margin.t + (i/5)*ch;
-    const val = yMax - (i/5)*(yMax-yMin);
-    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, pct(val)));
-  }
-
-  // Target line at 96%
-  const targetY = margin.t + ((yMax-96)/(yMax-yMin))*ch;
-  svg.appendChild(svgEl('line', { x1:margin.l, y1:targetY, x2:w-margin.r, y2:targetY, stroke:'#10b981', 'stroke-width':'1', 'stroke-dasharray':'6,4' }));
-  svg.appendChild(svgEl('text', { x:w-margin.r+4, y:targetY+3, fill:'#10b981', 'font-size':'9', 'font-family':'Inter,sans-serif' }, 'Goal'));
-
-  const getX = i => margin.l + (i/(data.length-1))*cw;
-  const getY = v => margin.t + ((yMax-v)/(yMax-yMin))*ch;
-
-  // Area fill
-  let areaPath = `M${getX(0)},${getY(data[0].cur)}`;
-  data.forEach((d,i) => { if (i>0) areaPath += ` L${getX(i)},${getY(d.cur)}`; });
-  areaPath += ` L${getX(data.length-1)},${margin.t+ch} L${getX(0)},${margin.t+ch} Z`;
-  svg.appendChild(svgEl('path', { d:areaPath, fill:'#3b82f6', opacity:'0.08' }));
-
-  // Prior year line
-  let prevPath = data.map((d,i) => `${i===0?'M':'L'}${getX(i)},${getY(d.prev)}`).join(' ');
-  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.prev)}`).join(' '), fill:'none', stroke:'#94a3b8', 'stroke-width':'2', 'stroke-dasharray':'6,4' }));
-
-  // Current year line
-  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.cur)}`).join(' '), fill:'none', stroke:'#3b82f6', 'stroke-width':'2.5' }));
-
-  // Points & labels
-  data.forEach((d,i) => {
-    const x = getX(i);
-    // Current
-    svg.appendChild(svgEl('circle', { cx:x, cy:getY(d.cur), r:'4', fill:'#3b82f6', stroke:'#fff', 'stroke-width':'2', class:'chart-bar', 'data-tip':`${d.m}\nCurrent: ${pct(d.cur)}\nPrior: ${pct(d.prev)}\nΔ ${(d.cur-d.prev>0?'+':'')}${pct(d.cur-d.prev)}` }));
-    // Prev
-    svg.appendChild(svgEl('circle', { cx:x, cy:getY(d.prev), r:'3', fill:'#94a3b8', stroke:'#fff', 'stroke-width':'1.5' }));
-    // X label
-    svg.appendChild(svgEl('text', { x:x, y:h-margin.b+16, fill:'#64748b', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, d.m));
-  });
-
-  container.innerHTML = '';
-  container.appendChild(svg);
-  const legend = document.createElement('div');
-  legend.className = 'flex gap-5 mt-2 justify-center';
-  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-brand-500 rounded"></div>2024-25</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-txt-light rounded" style="border-top:1px dashed #94a3b8;height:0"></div>2023-24</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 rounded" style="border-top:1px dashed #10b981;height:0"></div>District Goal (96%)</div>';
-  container.appendChild(legend);
-  attachChartTooltips(container);
-}
-
-function createHeatmap(container, data, cols, w=680, h=200) {
-  const margin = { t:30, r:20, b:10, l:110 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const cellW = cw / cols.length;
-  const cellH = ch / data.length;
-  const allVals = data.flatMap(d=>d.data);
-  const minV = Math.min(...allVals);
-  const maxV = Math.max(...allVals);
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-
-  // Col headers
-  cols.forEach((c,i) => {
-    svg.appendChild(svgEl('text', { x:margin.l+i*cellW+cellW/2, y:margin.t-8, fill:'#64748b', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, c));
-  });
-
-  data.forEach((row,ri) => {
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:margin.t+ri*cellH+cellH/2+4, fill:'#64748b', 'font-size':'11', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, row.school));
-    row.data.forEach((val,ci) => {
-      const intensity = (val - minV) / (maxV - minV);
-      const r = Math.round(255 - intensity * (255-220));
-      const g = Math.round(255 - intensity * (255-50));
-      const b = Math.round(255 - intensity * (255-50));
-      const rect = svgEl('rect', {
-        x:margin.l+ci*cellW+1, y:margin.t+ri*cellH+1,
-        width:cellW-2, height:cellH-2,
-        fill:`rgb(${r},${g},${b})`, rx:'3', class:'heatmap-cell',
-        'data-tip':`${row.school}\n${cols[ci]}: ${pct(val)}`
-      });
-      svg.appendChild(rect);
-      svg.appendChild(svgEl('text', {
-        x:margin.l+ci*cellW+cellW/2, y:margin.t+ri*cellH+cellH/2+4,
-        fill: intensity > 0.5 ? '#fff' : '#1e293b', 'font-size':'10', 'font-weight':'600',
-        'text-anchor':'middle', 'font-family':'Inter,sans-serif'
-      }, pct(val)));
-    });
-  });
-  container.innerHTML = '';
-  container.appendChild(svg);
-  attachChartTooltips(container);
-}
-
-function createHorizontalBar(container, data, w=500, h=320, threshold=10) {
-  const margin = { t:10, r:40, b:20, l:160 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const maxVal = Math.max(...data.map(d=>d.rate)) * 1.15;
-  const barH = Math.min(22, ch / data.length - 4);
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-
-  // Threshold line
-  const thX = margin.l + (threshold/maxVal)*cw;
-  svg.appendChild(svgEl('line', { x1:thX, y1:margin.t, x2:thX, y2:h-margin.b, stroke:'#ef4444', 'stroke-width':'1', 'stroke-dasharray':'4,3' }));
-  svg.appendChild(svgEl('text', { x:thX, y:margin.t-4, fill:'#ef4444', 'font-size':'9', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, threshold+'%'));
-
-  data.forEach((d,i) => {
-    const y = margin.t + i*(ch/data.length) + (ch/data.length - barH)/2;
-    const bw = (d.rate/maxVal)*cw;
-    const color = d.rate >= threshold ? '#ef4444' : d.rate >= threshold*0.7 ? '#f59e0b' : '#3b82f6';
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+barH/2+4, fill:'#64748b', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.group.length > 22 ? d.group.substring(0,20)+'…' : d.group));
-    svg.appendChild(svgEl('rect', { x:margin.l, y:y, width:Math.max(0,bw), height:barH, fill:color, rx:'2', class:'chart-bar', 'data-tip':`${d.group}: ${pct(d.rate)}` }));
-    svg.appendChild(svgEl('text', { x:margin.l+bw+6, y:y+barH/2+4, fill:'#1e293b', 'font-size':'10', 'font-weight':'600', 'font-family':'Inter,sans-serif' }, pct(d.rate)));
-  });
-  container.innerHTML = '';
-  container.appendChild(svg);
-  attachChartTooltips(container);
-}
-
-function createQuarterlyLineChart(container, data, w=540, h=280) {
-  const margin = { t:20, r:30, b:40, l:45 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const yMin = 0, yMax = 20;
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-  const quarters = ['Q1','Q2','Q3','Q4'];
-
-  for (let i = 0; i <= 4; i++) {
-    const y = margin.t + (i/4)*ch;
-    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
-    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, pct(yMax-(i/4)*yMax)));
-  }
-  quarters.forEach((q,i) => {
-    svg.appendChild(svgEl('text', { x:margin.l+(i/(quarters.length-1))*cw, y:h-margin.b+16, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, q));
-  });
-
-  // Target
-  const tY = margin.t + ((yMax-10)/(yMax-yMin))*ch;
-  svg.appendChild(svgEl('line', { x1:margin.l, y1:tY, x2:w-margin.r, y2:tY, stroke:'#ef4444', 'stroke-width':'1', 'stroke-dasharray':'5,4' }));
-  svg.appendChild(svgEl('text', { x:w-margin.r+2, y:tY+3, fill:'#ef4444', 'font-size':'9', 'font-family':'Inter,sans-serif' }, '10%'));
-
-  const getX = i => margin.l + (i/3)*cw;
-  const getY = v => margin.t + ((yMax-v)/(yMax-yMin))*ch;
-
-  data.forEach(school => {
-    const pts = school.q.map((v,i) => `${getX(i)},${getY(v)}`).join(' ');
-    svg.appendChild(svgEl('polyline', { points:pts, fill:'none', stroke:school.color, 'stroke-width':'2' }));
-    school.q.forEach((v,i) => {
-      svg.appendChild(svgEl('circle', { cx:getX(i), cy:getY(v), r:'4', fill:school.color, stroke:'#fff', 'stroke-width':'2', class:'chart-bar', 'data-tip':`${school.school}\n${quarters[i]}: ${pct(v)}` }));
-    });
-  });
-
-  container.innerHTML = '';
-  container.appendChild(svg);
-  const legend = document.createElement('div');
-  legend.className = 'flex flex-wrap gap-3 mt-2 justify-center';
-  data.forEach(s => {
-    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full" style="background:${s.color}"></div>${s.school}</div>`;
-  });
-  container.appendChild(legend);
-  attachChartTooltips(container);
-}
-
-function createGroupedHBar(container, data, w=540, h=420) {
-  const margin = { t:10, r:60, b:20, l:40 };
-  const cw = w - margin.l - margin.r;
-  const ch = h - margin.t - margin.b;
-  const maxVal = Math.max(...data.flatMap(d=>[d.atRisk,d.chronic])) * 1.2;
-  const groupH = ch / data.length;
-  const barH = Math.min(10, groupH/2 - 2);
-  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
-
-  data.forEach((d,i) => {
-    const y = margin.t + i*groupH;
-    svg.appendChild(svgEl('text', { x:margin.l-6, y:y+groupH/2+4, fill:'#64748b', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.g));
-    // At Risk bar
-    const arW = (d.atRisk/maxVal)*cw;
-    svg.appendChild(svgEl('rect', { x:margin.l, y:y+groupH/2-barH-1, width:arW, height:barH, fill:'#3b82f6', rx:'1', class:'chart-bar', 'data-tip':`Grade ${d.g}\nAt-Risk: ${d.atRisk} students` }));
-    svg.appendChild(svgEl('text', { x:margin.l+arW+4, y:y+groupH/2-barH/2+3, fill:'#64748b', 'font-size':'9', 'font-family':'Inter,sans-serif' }, String(d.atRisk)));
-    // Chronic bar
-    const crW = (d.chronic/maxVal)*cw;
-    svg.appendChild(svgEl('rect', { x:margin.l, y:y+groupH/2+1, width:crW, height:barH, fill:'#ef4444', rx:'1', class:'chart-bar', 'data-tip':`Grade ${d.g}\nChronic: ${d.chronic} students` }));
-    svg.appendChild(svgEl('text', { x:margin.l+crW+4, y:y+groupH/2+barH/2+5, fill:'#64748b', 'font-size':'9', 'font-family':'Inter,sans-serif' }, String(d.chronic)));
-  });
-  container.innerHTML = '';
-  container.appendChild(svg);
-  const legend = document.createElement('div');
-  legend.className = 'flex gap-4 mt-2 justify-center';
-  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-brand-500"></div>At-Risk</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-danger-500"></div>Chronic</div>';
-  container.appendChild(legend);
-  attachChartTooltips(container);
 }
 
 function attachChartTooltips(container) {
@@ -657,9 +408,470 @@ function attachChartTooltips(container) {
   });
 }
 
-// ===================== RENDER FUNCTIONS =====================
+// ===================== COMPUTE METRICS =====================
+function computeMetrics(f) {
+  let data = ALL_STUDENTS.filter(s => {
+    if (f.school !== 'All' && s.school !== f.school) return false;
+    if (f.grade !== 'All' && s.grade !== f.grade) return false;
+    if (f.group !== 'All' && s.group !== f.group) return false;
+    if (f.absenceType !== 'All' && s.absenceType !== f.absenceType) return false;
+    if (f.month !== 'All' && s.month !== f.month) return false;
+    if (f.quarter !== 'All' && s.quarter !== f.quarter) return false;
+    if (f.riskLevel !== 'All' && s.riskLevel !== f.riskLevel) return false;
+    if (f.interventionStatus !== 'All' && s.interventionStatus !== f.interventionStatus) return false;
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      if (!s.name.toLowerCase().includes(q) && !s.id.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const totalStudents = data.length || 1;
+  const totalDaysAbsent = data.reduce((s,d) => s + d.daysAbsent, 0);
+  const totalDaysPresent = data.reduce((s,d) => s + d.daysPresent, 0);
+  const totalDays = totalDaysPresent + totalDaysAbsent;
+  const avgAttendanceRate = totalDays > 0 ? (totalDaysPresent / totalDays * 100) : 0;
+  const chronicThreshold = parseInt(f.threshold || '10');
+  const chronicDays = Math.round(180 * chronicThreshold / 100);
+  const chronicallyAbsent = data.filter(s => s.daysAbsent >= chronicDays);
+  const avgDaysAbsent = totalDaysAbsent / totalStudents;
+  const perfectAttendance = data.filter(s => s.daysAbsent === 0);
+
+  // By school
+  const bySchool = SCHOOLS.map(school => {
+    const sd = data.filter(s => s.school === school);
+    if (!sd.length) return { school, present:0, excused:0, unexcused:0, tardy:0, total:0 };
+    const total = sd.length;
+    const totalAbs = sd.reduce((a,s) => a + s.daysAbsent, 0);
+    const totalPres = sd.reduce((a,s) => a + s.daysPresent, 0);
+    const presentPct = totalPres / (totalPres + totalAbs) * 100;
+    const absPct = 100 - presentPct;
+    const excCount = sd.filter(s => s.absenceType === 'Excused').length;
+    const unexCount = sd.filter(s => s.absenceType === 'Unexcused').length;
+    const tardyCount = sd.filter(s => s.absenceType === 'Tardy').length;
+    const typeTotal = excCount + unexCount + tardyCount || 1;
+    return {
+      school, total,
+      present: presentPct,
+      excused: (excCount / typeTotal) * absPct,
+      unexcused: (unexCount / typeTotal) * absPct,
+      tardy: (tardyCount / typeTotal) * absPct
+    };
+  }).filter(s => f.school === 'All' || s.total > 0);
+
+  // By absence type
+  const excusedCount = data.filter(s => s.absenceType === 'Excused').length;
+  const unexcusedCount = data.filter(s => s.absenceType === 'Unexcused').length;
+  const tardyCount = data.filter(s => s.absenceType === 'Tardy').length;
+  const typeTotal = excusedCount + unexcusedCount + tardyCount || 1;
+  const excPct = Math.round(excusedCount / typeTotal * 100);
+  const unexPct = Math.round(unexcusedCount / typeTotal * 100);
+  const tardyPct = 100 - excPct - unexPct;
+  const byType = [
+    { label:'Excused', pct: excPct, count: excusedCount, color:'#3b82f6' },
+    { label:'Unexcused', pct: unexPct, count: unexcusedCount, color:'#ef4444' },
+    { label:'Tardy', pct: Math.max(0, tardyPct), count: tardyCount, color:'#8b5cf6' }
+  ];
+
+  // By DOW
+  const baseAbs = Math.max(10, data.length * 0.5);
+  const smMap = { 'Jefferson Elementary':0.7,'Lincoln Middle':1.0,'Washington High':1.4,'Roosevelt K-8':0.85,'Adams Elementary':0.72 };
+  const gmMap = { 'All':1,'Foster Youth':2.1,'Homeless':1.9,'Special Education':1.5,'English Learners':1.3,'Socioeconomically Disadvantaged':1.2,'General':0.8,'Gifted':0.6,'504':0.7 };
+  const sm = f.school !== 'All' ? (smMap[f.school] || 1) : 1;
+  const gm = f.group !== 'All' ? (gmMap[f.group] || 1) : 1;
+  const byDOW = [
+    { day:'Mon', count: Math.round(baseAbs * 0.18 * sm * gm) },
+    { day:'Tue', count: Math.round(baseAbs * 0.14 * sm * gm) },
+    { day:'Wed', count: Math.round(baseAbs * 0.13 * sm * gm) },
+    { day:'Thu', count: Math.round(baseAbs * 0.14 * sm * gm) },
+    { day:'Fri', count: Math.round(baseAbs * 0.41 * sm * gm) }
+  ];
+
+  // Monthly trend
+  const seasonal = [0.4,0.2,-0.1,-0.4,-1.8,0.2,0.4,0.6,0.8,-0.2,-0.6];
+  const monthlyTrend = MONTHS_ALL.map((m, idx) => {
+    const base = avgAttendanceRate;
+    const cur = Math.min(99.5, Math.max(75, base + seasonal[idx] + ((idx * 7 % 5) * 0.1 - 0.2)));
+    const prev = Math.min(99.5, Math.max(75, cur - 0.8 + ((idx * 3 % 5) * 0.15 - 0.3)));
+    return { m, cur: parseFloat(cur.toFixed(1)), prev: parseFloat(prev.toFixed(1)) };
+  });
+
+  // Risk counts
+  const riskCounts = { Low: data.filter(s => s.riskLevel === 'Low').length, 'At-Risk': data.filter(s => s.riskLevel === 'At-Risk').length, Moderate: data.filter(s => s.riskLevel === 'Moderate').length, Chronic: data.filter(s => s.riskLevel === 'Chronic').length };
+
+  // By grade
+  const byGrade = GRADES_ALL.map(g => {
+    const gd = data.filter(s => s.grade === g);
+    return { g, atRisk: gd.filter(s => s.riskLevel === 'At-Risk' || s.riskLevel === 'Moderate').length, chronic: gd.filter(s => s.riskLevel === 'Chronic').length, total: gd.length };
+  }).filter(g => g.total > 0);
+
+  // Quarterly by school
+  const schoolColors = ['#3b82f6','#10b981','#ef4444','#8b5cf6','#f59e0b'];
+  const quarters = ['Q1','Q2','Q3','Q4'];
+  const quarterlyBySchool = SCHOOLS.map((school, si) => {
+    const sd = data.filter(s => s.school === school);
+    const q = quarters.map(q => {
+      const qd = sd.filter(s => s.quarter === q);
+      if (!qd.length) return 0;
+      return parseFloat((qd.filter(s => s.daysAbsent >= chronicDays).length / qd.length * 100).toFixed(1));
+    });
+    return { school, q, color: schoolColors[si] };
+  }).filter(s => data.some(d => d.school === s.school));
+
+  // Risk transition matrix (deterministic from data)
+  const riskLabels = ['Low','At-Risk','Moderate','Chronic'];
+  const riskMatrix = riskLabels.map((from, ri) => {
+    return riskLabels.map((to, ci) => {
+      const fromCount = data.filter(s => s.riskLevel === from).length;
+      if (ri === ci) return Math.max(0, Math.round(fromCount * 0.65));
+      if (ci > ri) return Math.max(0, Math.round(fromCount * 0.12 / (ci - ri)));
+      return Math.max(0, Math.round(fromCount * 0.15 / (ri - ci)));
+    });
+  });
+
+  // Chronic by group
+  const groupsList = ['All Students','English Learners','Special Education','Socioeconomically Disadvantaged','Foster Youth','Homeless','Gifted','504'];
+  const chronicByGroup = groupsList.map(grp => {
+    const gd = grp === 'All Students' ? data : data.filter(s => s.group === grp);
+    if (!gd.length) return null;
+    const rate = gd.filter(s => s.daysAbsent >= chronicDays).length / gd.length * 100;
+    return { group: grp, rate: parseFloat(rate.toFixed(1)) };
+  }).filter(Boolean);
+
+  // Chronic by school donut
+  const chronicSchoolDonut = SCHOOLS.map((school, si) => {
+    const sd = data.filter(s => s.school === school);
+    const cnt = sd.filter(s => s.daysAbsent >= chronicDays).length;
+    return { label: school.replace(' Elementary',' Elem.'), count: cnt, color: schoolColors[si] };
+  }).filter(s => s.count > 0);
+  const chronicSchoolTotal = chronicSchoolDonut.reduce((a,s) => a + s.count, 0) || 1;
+  chronicSchoolDonut.forEach(s => { s.pct = Math.round(s.count / chronicSchoolTotal * 100); });
+
+  // Heatmap
+  const heatmap = SCHOOLS.map(school => {
+    const sd = data.filter(s => s.school === school);
+    const monthData = MONTHS_ALL.map(m => {
+      const md = sd.filter(s => s.month === m);
+      if (!md.length) return 0;
+      return parseFloat((md.filter(s => s.daysAbsent >= chronicDays).length / md.length * 100).toFixed(1));
+    });
+    return { school: school.replace(' Elementary',' Elem.').replace(' Middle','').replace(' High',''), data: monthData };
+  });
+
+  // Intervention students
+  const interventionStudents = data.filter(s => s.riskLevel === 'Chronic' || s.riskLevel === 'Moderate' || (s.riskLevel === 'At-Risk' && s.daysAbsent >= 12))
+    .sort((a,b) => b.daysAbsent - a.daysAbsent)
+    .slice(0, 10)
+    .map(s => ({
+      name: s.name, school: s.school, grade: s.grade, absent: s.daysAbsent,
+      rate: s.attendanceRate, risk: s.riskLevel, counselor: s.counselor,
+      status: s.interventionStatus,
+      lastContact: s.interventionStatus === 'None' ? '—' : 'Jun ' + String(seededInt(s.id.charCodeAt(4) * 3, 1, 10)).padStart(2,'0') + ', 2025',
+      notes: s.interventionStatus === 'Active' ? 'Weekly check-ins' : s.interventionStatus === 'Pending' ? 'Awaiting parent consent' : s.interventionStatus === 'Completed' ? 'Completed program' : 'To be assigned'
+    }));
+
+  // Severely chronic
+  const severelyChronicDays = Math.round(180 * 20 / 100);
+  const severelyChronic = data.filter(s => s.daysAbsent >= severelyChronicDays);
+  const newChronicMonth = data.filter(s => s.daysAbsent >= chronicDays && s.month === 'Jun').length;
+
+  return {
+    totalStudents: data.length,
+    avgAttendanceRate: parseFloat(avgAttendanceRate.toFixed(1)),
+    chronicallyAbsentCount: chronicallyAbsent.length,
+    chronicallyAbsentPct: parseFloat((chronicallyAbsent.length / totalStudents * 100).toFixed(1)),
+    avgDaysAbsent: parseFloat(avgDaysAbsent.toFixed(1)),
+    perfectAttendanceCount: perfectAttendance.length,
+    bySchool, byType, byDOW, monthlyTrend,
+    riskCounts, byGrade, quarterlyBySchool, riskMatrix,
+    chronicByGroup, chronicSchoolDonut, chronicSchoolTotal,
+    heatmap, interventionStudents,
+    filteredStudents: data,
+    chronicThreshold, chronicDays,
+    severelyChronicCount: severelyChronic.length,
+    severelyChronicPct: parseFloat((severelyChronic.length / totalStudents * 100).toFixed(1)),
+    newChronicMonth
+  };
+}
+
+// ===================== CHART DRAWING =====================
+function drawStackedHBar(container, data, w, h) {
+  w = w || 540; h = h || 220;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:10,r:20,b:40,l:140 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const barH = Math.min(28, ch/data.length - 6);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+  data.forEach((d,i) => {
+    const y = margin.t + i*(ch/data.length) + (ch/data.length - barH)/2;
+    const lbl = d.school.length > 18 ? d.school.substring(0,16)+'…' : d.school;
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+barH/2+4, fill:'#64748b', 'font-size':'11', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, lbl));
+    const segs = [
+      { val:d.present, color:'#3b82f6', label:'Present' },
+      { val:d.excused, color:'#f59e0b', label:'Excused' },
+      { val:d.unexcused, color:'#ef4444', label:'Unexcused' },
+      { val:d.tardy, color:'#8b5cf6', label:'Tardy' }
+    ];
+    let cx = margin.l;
+    segs.forEach(s => {
+      const bw = (s.val/100)*cw;
+      if (bw > 0) svg.appendChild(svgEl('rect', { x:cx, y:y, width:bw, height:barH, fill:s.color, class:'chart-bar', 'data-tip':`${d.school}\n${s.label}: ${pct(s.val)}` }));
+      cx += bw;
+    });
+  });
+  for (let i=0; i<=4; i++) {
+    const x = margin.l + (i/4)*cw;
+    svg.appendChild(svgEl('line', { x1:x, y1:margin.t, x2:x, y2:h-margin.b, stroke:'#e2e8f0', 'stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:x, y:h-margin.b+16, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, (i*25)+'%'));
+  }
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-4 mt-3 justify-center';
+  [{ l:'Present',c:'#3b82f6' },{ l:'Excused',c:'#f59e0b' },{ l:'Unexcused',c:'#ef4444' },{ l:'Tardy',c:'#8b5cf6' }].forEach(s => {
+    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${s.c}"></div>${s.l}</div>`;
+  });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function drawDonut(container, data, centerText, w, h) {
+  w = w || 280; h = h || 280;
+  if (!data.length || data.every(d => d.count === 0 && d.pct === 0)) { container.innerHTML = emptyChart(); return; }
+  const cx2 = w/2, cy2 = h/2, r = 90, inner = 55;
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full max-w-[280px] mx-auto' });
+  let startAngle = -90;
+  data.forEach(d => {
+    if (d.pct <= 0) return;
+    const angle = (d.pct/100)*360;
+    const endAngle = startAngle + angle;
+    const largeArc = angle > 180 ? 1 : 0;
+    const x1 = cx2+r*Math.cos(startAngle*Math.PI/180), y1 = cy2+r*Math.sin(startAngle*Math.PI/180);
+    const x2 = cx2+r*Math.cos(endAngle*Math.PI/180), y2 = cy2+r*Math.sin(endAngle*Math.PI/180);
+    const ix1 = cx2+inner*Math.cos(endAngle*Math.PI/180), iy1 = cy2+inner*Math.sin(endAngle*Math.PI/180);
+    const ix2 = cx2+inner*Math.cos(startAngle*Math.PI/180), iy2 = cy2+inner*Math.sin(startAngle*Math.PI/180);
+    const path = `M${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} L${ix1},${iy1} A${inner},${inner} 0 ${largeArc},0 ${ix2},${iy2} Z`;
+    svg.appendChild(svgEl('path', { d:path, fill:d.color, class:'chart-bar', 'data-tip':`${d.label}\n${num(d.count)} (${d.pct}%)` }));
+    startAngle = endAngle;
+  });
+  svg.appendChild(svgEl('text', { x:cx2, y:cy2-6, fill:'#1e293b', 'font-size':'22', 'font-weight':'700', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, centerText));
+  svg.appendChild(svgEl('text', { x:cx2, y:cy2+14, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, 'Total'));
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-3 mt-3 justify-center';
+  data.forEach(d => {
+    if (d.pct > 0) legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${d.color}"></div>${d.label} (${d.pct}%)</div>`;
+  });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function drawVerticalBar(container, data, w, h) {
+  w = w || 520; h = h || 260;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:10,r:20,b:40,l:50 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const maxVal = Math.max(...data.map(d=>d.count),1) * 1.15;
+  const barW = Math.min(48, cw/data.length - 12);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+  const total = data.reduce((s,d)=>s+d.count,0) || 1;
+  for (let i=0;i<=4;i++) {
+    const y = margin.t+(i/4)*ch;
+    svg.appendChild(svgEl('line', { x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif' }, num(Math.round(maxVal*(1-i/4)))));
+  }
+  const friPct = data.find(d=>d.day==='Fri');
+  const friShare = friPct ? Math.round(friPct.count/total*100) : 0;
+  data.forEach((d,i) => {
+    const x = margin.l+i*(cw/data.length)+(cw/data.length-barW)/2;
+    const barH2 = (d.count/maxVal)*ch;
+    const y = margin.t+ch-barH2;
+    const color = d.day==='Fri' ? '#ef4444' : '#3b82f6';
+    svg.appendChild(svgEl('rect', { x:x,y:y,width:barW,height:barH2,fill:color,rx:'2',class:'chart-bar','data-tip':`${d.day}: ${num(d.count)} absences\n${pct(d.count/total*100)} of weekly total` }));
+    svg.appendChild(svgEl('text', { x:x+barW/2,y:h-margin.b+16,fill:'#64748b','font-size':'11','text-anchor':'middle','font-family':'Inter,sans-serif' }, d.day));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const note = document.createElement('div');
+  note.className = 'text-xs text-danger-500 font-medium mt-2 text-center';
+  note.textContent = `Fridays account for ${friShare}% of all absences`;
+  container.appendChild(note);
+  attachChartTooltips(container);
+}
+
+function drawLineChart(container, data, w, h) {
+  w = w || 540; h = h || 280;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:20,r:30,b:40,l:45 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const allVals = data.flatMap(d=>[d.cur,d.prev]);
+  const yMin2 = Math.max(70, Math.floor(Math.min(...allVals)) - 3);
+  const yMax2 = Math.min(100, Math.ceil(Math.max(...allVals)) + 2);
+  const svg = svgEl('svg', { width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full' });
+  for (let i=0;i<=5;i++) {
+    const y=margin.t+(i/5)*ch;
+    const val=yMax2-(i/5)*(yMax2-yMin2);
+    svg.appendChild(svgEl('line', { x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif' }, pct(val)));
+  }
+  // Goal line at 96%
+  if (96 >= yMin2 && 96 <= yMax2) {
+    const tY = margin.t+((yMax2-96)/(yMax2-yMin2))*ch;
+    svg.appendChild(svgEl('line', { x1:margin.l,y1:tY,x2:w-margin.r,y2:tY,stroke:'#10b981','stroke-width':'1','stroke-dasharray':'6,4' }));
+    svg.appendChild(svgEl('text', { x:w-margin.r+4,y:tY+3,fill:'#10b981','font-size':'9','font-family':'Inter,sans-serif' }, 'Goal'));
+  }
+  const getX = i => margin.l+(i/(data.length-1))*cw;
+  const getY = v => margin.t+((yMax2-v)/(yMax2-yMin2))*ch;
+  // Area
+  let areaPath = `M${getX(0)},${getY(data[0].cur)}`;
+  data.forEach((d,i)=>{ if(i>0) areaPath+=` L${getX(i)},${getY(d.cur)}`; });
+  areaPath += ` L${getX(data.length-1)},${margin.t+ch} L${getX(0)},${margin.t+ch} Z`;
+  svg.appendChild(svgEl('path', { d:areaPath, fill:'#3b82f6', opacity:'0.08' }));
+  // Prior year
+  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.prev)}`).join(' '), fill:'none', stroke:'#94a3b8', 'stroke-width':'2', 'stroke-dasharray':'6,4' }));
+  // Current year
+  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.cur)}`).join(' '), fill:'none', stroke:'#3b82f6', 'stroke-width':'2.5' }));
+  data.forEach((d,i) => {
+    const x = getX(i);
+    svg.appendChild(svgEl('circle', { cx:x,cy:getY(d.cur),r:'4',fill:'#3b82f6',stroke:'#fff','stroke-width':'2',class:'chart-bar','data-tip':`${d.m}\nCurrent: ${pct(d.cur)}\nPrior: ${pct(d.prev)}\nΔ ${(d.cur-d.prev>0?'+':'')}${pct(d.cur-d.prev)}` }));
+    svg.appendChild(svgEl('circle', { cx:x,cy:getY(d.prev),r:'3',fill:'#94a3b8',stroke:'#fff','stroke-width':'1.5' }));
+    svg.appendChild(svgEl('text', { x:x,y:h-margin.b+16,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif' }, d.m));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex gap-5 mt-2 justify-center';
+  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-brand-500 rounded"></div>2024-25</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-txt-light rounded" style="border-top:1px dashed #94a3b8;height:0"></div>2023-24</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 rounded" style="border-top:1px dashed #10b981;height:0"></div>District Goal (96%)</div>';
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function drawHeatmap(container, data, cols, w, h) {
+  w = w || 680; h = h || 200;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:30,r:20,b:10,l:110 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const cellW = cw/cols.length, cellH = ch/data.length;
+  const allVals = data.flatMap(d=>d.data);
+  const minV = Math.min(...allVals), maxV = Math.max(...allVals, 0.1);
+  const svg = svgEl('svg', { width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full' });
+  cols.forEach((c,i) => {
+    svg.appendChild(svgEl('text', { x:margin.l+i*cellW+cellW/2,y:margin.t-8,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif' }, c));
+  });
+  data.forEach((row,ri) => {
+    svg.appendChild(svgEl('text', { x:margin.l-8,y:margin.t+ri*cellH+cellH/2+4,fill:'#64748b','font-size':'11','text-anchor':'end','font-family':'Inter,sans-serif' }, row.school));
+    row.data.forEach((val,ci) => {
+      const intensity = maxV > minV ? (val-minV)/(maxV-minV) : 0;
+      const r2 = Math.round(255-intensity*(255-220));
+      const g = Math.round(255-intensity*(255-50));
+      const b = Math.round(255-intensity*(255-50));
+      svg.appendChild(svgEl('rect', { x:margin.l+ci*cellW+1,y:margin.t+ri*cellH+1,width:cellW-2,height:cellH-2,fill:`rgb(${r2},${g},${b})`,rx:'3',class:'heatmap-cell','data-tip':`${row.school}\n${cols[ci]}: ${pct(val)}` }));
+      svg.appendChild(svgEl('text', { x:margin.l+ci*cellW+cellW/2,y:margin.t+ri*cellH+cellH/2+4,fill:intensity>0.5?'#fff':'#1e293b','font-size':'10','font-weight':'600','text-anchor':'middle','font-family':'Inter,sans-serif' }, pct(val)));
+    });
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  attachChartTooltips(container);
+}
+
+function drawHorizontalBar(container, data, w, h, threshold) {
+  w = w || 500; h = h || 320; threshold = threshold || 10;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:10,r:40,b:20,l:160 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const maxVal = Math.max(...data.map(d=>d.rate),0.1) * 1.15;
+  const barH2 = Math.min(22, ch/data.length - 4);
+  const svg = svgEl('svg', { width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full' });
+  const thX = margin.l+(threshold/maxVal)*cw;
+  svg.appendChild(svgEl('line', { x1:thX,y1:margin.t,x2:thX,y2:h-margin.b,stroke:'#ef4444','stroke-width':'1','stroke-dasharray':'4,3' }));
+  svg.appendChild(svgEl('text', { x:thX,y:margin.t-4,fill:'#ef4444','font-size':'9','text-anchor':'middle','font-family':'Inter,sans-serif' }, threshold+'%'));
+  data.forEach((d,i) => {
+    const y = margin.t+i*(ch/data.length)+(ch/data.length-barH2)/2;
+    const bw = (d.rate/maxVal)*cw;
+    const color = d.rate >= threshold ? '#ef4444' : d.rate >= threshold*0.7 ? '#f59e0b' : '#3b82f6';
+    const lbl = d.group.length > 22 ? d.group.substring(0,20)+'…' : d.group;
+    svg.appendChild(svgEl('text', { x:margin.l-8,y:y+barH2/2+4,fill:'#64748b','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif' }, lbl));
+    svg.appendChild(svgEl('rect', { x:margin.l,y:y,width:Math.max(0,bw),height:barH2,fill:color,rx:'2',class:'chart-bar','data-tip':`${d.group}: ${pct(d.rate)}` }));
+    svg.appendChild(svgEl('text', { x:margin.l+bw+6,y:y+barH2/2+4,fill:'#1e293b','font-size':'10','font-weight':'600','font-family':'Inter,sans-serif' }, pct(d.rate)));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  attachChartTooltips(container);
+}
+
+function drawQuarterlyLine(container, data, w, h) {
+  w = w || 540; h = h || 280;
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:20,r:30,b:40,l:45 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const yMin2 = 0, yMax2 = Math.max(20, ...data.flatMap(d=>d.q)) * 1.2;
+  const svg = svgEl('svg', { width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full' });
+  const quarters = ['Q1','Q2','Q3','Q4'];
+  for (let i=0;i<=4;i++) {
+    const y = margin.t+(i/4)*ch;
+    svg.appendChild(svgEl('line', { x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif' }, pct(yMax2-(i/4)*yMax2)));
+  }
+  quarters.forEach((q,i) => {
+    svg.appendChild(svgEl('text', { x:margin.l+(i/3)*cw,y:h-margin.b+16,fill:'#64748b','font-size':'11','text-anchor':'middle','font-family':'Inter,sans-serif' }, q));
+  });
+  const tY = margin.t+((yMax2-10)/(yMax2-yMin2))*ch;
+  svg.appendChild(svgEl('line', { x1:margin.l,y1:tY,x2:w-margin.r,y2:tY,stroke:'#ef4444','stroke-width':'1','stroke-dasharray':'5,4' }));
+  svg.appendChild(svgEl('text', { x:w-margin.r+2,y:tY+3,fill:'#ef4444','font-size':'9','font-family':'Inter,sans-serif' }, '10%'));
+  const getX = i => margin.l+(i/3)*cw;
+  const getY = v => margin.t+((yMax2-v)/(yMax2-yMin2))*ch;
+  data.forEach(school => {
+    const pts = school.q.map((v,i)=>`${getX(i)},${getY(v)}`).join(' ');
+    svg.appendChild(svgEl('polyline', { points:pts,fill:'none',stroke:school.color,'stroke-width':'2' }));
+    school.q.forEach((v,i) => {
+      svg.appendChild(svgEl('circle', { cx:getX(i),cy:getY(v),r:'4',fill:school.color,stroke:'#fff','stroke-width':'2',class:'chart-bar','data-tip':`${school.school}\n${quarters[i]}: ${pct(v)}` }));
+    });
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-3 mt-2 justify-center';
+  data.forEach(s => { legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full" style="background:${s.color}"></div>${s.school}</div>`; });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function drawGroupedHBar(container, data, w, h) {
+  w = w || 540; h = h || Math.max(200, data.length * 34 + 40);
+  if (!data.length) { container.innerHTML = emptyChart(); return; }
+  const margin = { t:10,r:60,b:20,l:40 };
+  const cw = w-margin.l-margin.r, ch = h-margin.t-margin.b;
+  const maxVal = Math.max(...data.flatMap(d=>[d.atRisk,d.chronic]),1) * 1.2;
+  const groupH = ch/data.length;
+  const barH2 = Math.min(10, groupH/2 - 2);
+  const svg = svgEl('svg', { width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full' });
+  data.forEach((d,i) => {
+    const y = margin.t+i*groupH;
+    svg.appendChild(svgEl('text', { x:margin.l-6,y:y+groupH/2+4,fill:'#64748b','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif' }, d.g));
+    const arW = (d.atRisk/maxVal)*cw;
+    svg.appendChild(svgEl('rect', { x:margin.l,y:y+groupH/2-barH2-1,width:arW,height:barH2,fill:'#3b82f6',rx:'1',class:'chart-bar','data-tip':`Grade ${d.g}\nAt-Risk: ${d.atRisk}` }));
+    svg.appendChild(svgEl('text', { x:margin.l+arW+4,y:y+groupH/2-barH2/2+3,fill:'#64748b','font-size':'9','font-family':'Inter,sans-serif' }, String(d.atRisk)));
+    const crW = (d.chronic/maxVal)*cw;
+    svg.appendChild(svgEl('rect', { x:margin.l,y:y+groupH/2+1,width:crW,height:barH2,fill:'#ef4444',rx:'1',class:'chart-bar','data-tip':`Grade ${d.g}\nChronic: ${d.chronic}` }));
+    svg.appendChild(svgEl('text', { x:margin.l+crW+4,y:y+groupH/2+barH2/2+5,fill:'#64748b','font-size':'9','font-family':'Inter,sans-serif' }, String(d.chronic)));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex gap-4 mt-2 justify-center';
+  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-brand-500"></div>At-Risk</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-danger-500"></div>Chronic</div>';
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function emptyChart() {
+  return '<div class="flex flex-col items-center justify-center py-12 text-center"><div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3"><i data-lucide="bar-chart-3" class="w-6 h-6 text-brand-400"></i></div><p class="text-sm font-semibold text-txt-primary">No data matches filters</p><p class="text-xs text-txt-muted mt-1">Try adjusting or resetting your filters.</p></div>';
+}
+
+// ===================== RENDER DOMAIN TABS =====================
 function renderDomainTabs() {
-  const container = $('#domain-tabs');
+  const container = document.getElementById('domain-tabs');
   container.innerHTML = '';
   DOMAIN_TABS.forEach(tab => {
     const btn = document.createElement('button');
@@ -677,20 +889,17 @@ function renderDomainTabs() {
 }
 
 function updateBreadcrumb() {
-  $('#breadcrumb-domain').textContent = state.activeDomain;
+  document.getElementById('breadcrumb-domain').textContent = state.activeDomain;
   const subMap = { overview:'Overview', quarterly:'Quarterly Trending Risk', chronic:'Chronic Absenteeism', main:'' };
-  $('#breadcrumb-sub').textContent = subMap[state.activeSubTab] || state.activeDomain;
+  document.getElementById('breadcrumb-sub').textContent = subMap[state.activeSubTab] || state.activeDomain;
 }
 
+// ===================== MAIN RENDER =====================
 function renderContent() {
-  const main = $('#main-content');
+  const main = document.getElementById('main-content');
   main.scrollTop = 0;
-  const role = state.role;
-  const isTeacher = role === 'teacher';
-  const isCommunity = role === 'community-partner';
-
   if (state.activeDomain === 'Attendance') {
-    renderAttendance(main, isTeacher, isCommunity);
+    renderAttendance(main);
   } else if (state.activeDomain === 'Assessments') {
     renderAssessments(main);
   } else if (state.activeDomain === 'Early Warning') {
@@ -700,7 +909,6 @@ function renderContent() {
   } else {
     renderPlaceholder(main, state.activeDomain, `This domain is in the roadmap — ${state.activeDomain} dashboards will be available in Phase 2.`, 'clock');
   }
-
   refreshIcons();
 }
 
@@ -713,11 +921,10 @@ function renderPlaceholder(main, title, msg, icon) {
 }
 
 // ===================== ATTENDANCE =====================
-function renderAttendance(main, isTeacher, isCommunity) {
-  const schoolScope = isTeacher ? 'Lincoln Middle' : null;
+function renderAttendance(main) {
+  const isCommunity = state.role === 'community-partner';
   let html = '<div class="fade-in">';
 
-  // Sub tabs
   html += `<div class="bg-white border-b border-surface-border px-6 flex gap-1">
     ${[{k:'overview',l:'Overview'},{k:'quarterly',l:'Quarterly Trending Risk'},{k:'chronic',l:'Chronic Absenteeism'}].map(t =>
       `<button class="att-subtab px-4 py-3 text-xs font-medium border-b-2 transition-colors ${state.activeSubTab === t.k ? 'border-brand-500 text-brand-500' : 'border-transparent text-txt-muted hover:text-txt-primary'}" data-subtab="${t.k}">${t.l}</button>`
@@ -727,156 +934,447 @@ function renderAttendance(main, isTeacher, isCommunity) {
   html += '<div class="p-5 space-y-5" id="att-content">';
 
   if (state.activeSubTab === 'overview') {
-    html += renderAttendanceOverview(isTeacher, isCommunity, schoolScope);
+    html += buildOverviewHTML(isCommunity);
   } else if (state.activeSubTab === 'quarterly') {
-    html += renderQuarterlyRisk(isTeacher, isCommunity);
+    html += buildQuarterlyHTML();
   } else if (state.activeSubTab === 'chronic') {
-    html += renderChronicAbsenteeism(isTeacher, isCommunity);
+    html += buildChronicHTML(isCommunity);
   }
 
   html += '</div></div>';
   html += '<footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>';
   main.innerHTML = html;
 
-  // Attach subtab listeners
+  // Sub-tab listeners
   main.querySelectorAll('.att-subtab').forEach(btn => {
     btn.addEventListener('click', () => {
       state.activeSubTab = btn.dataset.subtab;
       updateBreadcrumb();
-      renderContent();
+      renderAttendance(main);
     });
   });
 
-  // Render charts
   setTimeout(() => {
-    if (state.activeSubTab === 'overview') renderOverviewCharts(isCommunity);
-    if (state.activeSubTab === 'quarterly') renderQuarterlyCharts();
-    if (state.activeSubTab === 'chronic') renderChronicCharts();
-    attachFilterListeners();
-    attachTableListeners();
-    attachDownloadListeners();
-  }, 50);
+    wireFilters();
+    renderCurrentDashboard();
+  }, 30);
 }
 
-function renderFilterBar(id, filters) {
+function buildFilterBar(id, filterDefs) {
   let html = `<div class="bg-white rounded-xl border border-surface-border p-4 sticky top-0 z-10" id="${id}">`;
   html += '<div class="flex flex-wrap gap-3 items-end">';
-  filters.forEach(f => {
+  filterDefs.forEach(f => {
     html += `<div class="flex flex-col gap-1"><label class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider">${f.label}</label>`;
     if (f.type === 'select') {
-      html += `<select class="filter-select" data-filter="${f.key}">${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
+      html += `<select class="filter-select live-filter" data-filter="${f.key}">${f.options.map(o => `<option value="${o}" ${filters[f.key]===o?'selected':''}>${o}</option>`).join('')}</select>`;
     } else {
-      html += `<input type="text" class="filter-select" placeholder="${f.placeholder||''}" data-filter="${f.key}" value="${f.value||''}" style="min-width:150px;">`;
+      html += `<input type="text" class="filter-select live-filter" placeholder="${f.placeholder||''}" data-filter="${f.key}" value="${filters[f.key]||f.value||''}" style="min-width:150px;">`;
     }
     html += '</div>';
   });
-  html += `<button class="bg-brand-500 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors h-[34px]">Apply Filters</button>`;
-  html += `<button class="text-xs text-brand-500 font-medium hover:underline h-[34px] flex items-center">Reset</button>`;
-  html += `<div class="ml-auto"><button class="download-csv flex items-center gap-1.5 text-xs font-medium text-txt-muted border border-surface-border rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors" data-csv="${id}"><i data-lucide="download" class="w-3.5 h-3.5"></i>Download CSV</button></div>`;
+  html += `<button class="reset-filters-btn text-xs text-brand-500 font-medium hover:underline h-[34px] flex items-center">Reset</button>`;
+  html += `<div class="ml-auto flex items-center gap-2"><span id="loading-indicator" class="hidden"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></span><button class="download-csv flex items-center gap-1.5 text-xs font-medium text-txt-muted border border-surface-border rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors" data-csv="${id}"><i data-lucide="download" class="w-3.5 h-3.5"></i>Download CSV</button></div>`;
   html += '</div></div>';
   return html;
 }
 
-function renderKPICards(cards) {
-  return `<div class="grid grid-cols-2 lg:grid-cols-${cards.length} gap-4">${cards.map(c => `
+function buildKPIHTML(cards, prefix) {
+  return `<div class="grid grid-cols-2 lg:grid-cols-${Math.min(cards.length,5)} gap-4">${cards.map((c,i) => `
     <div class="kpi-card">
       <div class="flex items-start justify-between mb-1">
         <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider">${c.label}</span>
-        ${c.badge ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${c.badgeClass}">${c.badge}</span>` : ''}
+        <span class="kpi-badge-${prefix}-${i} text-[10px] font-bold px-2 py-0.5 rounded-full ${c.badgeClass||''}">${c.badge||''}</span>
       </div>
-      <div class="text-2xl font-bold text-txt-primary tabular-nums">${c.value}</div>
-      <div class="text-xs text-txt-muted mt-1">${c.sub}</div>
-      ${c.trend ? `<div class="flex items-center gap-1 mt-2 text-xs font-medium ${c.trendUp ? 'text-success-500' : 'text-danger-500'}"><i data-lucide="${c.trendUp ? 'trending-up' : 'trending-down'}" class="w-3.5 h-3.5"></i>${c.trend}</div>` : ''}
+      <div class="text-2xl font-bold text-txt-primary tabular-nums kpi-val" data-kpi="${prefix}-${i}" data-prev="${c.rawVal||0}">${c.value}</div>
+      <div class="text-xs text-txt-muted mt-1 kpi-sub" data-kpisub="${prefix}-${i}">${c.sub}</div>
+      ${c.trend ? `<div class="flex items-center gap-1 mt-2 text-xs font-medium ${c.trendUp ? 'text-success-500' : 'text-danger-500'} kpi-trend" data-kpitrend="${prefix}-${i}"><i data-lucide="${c.trendUp ? 'trending-up' : 'trending-down'}" class="w-3.5 h-3.5"></i>${c.trend}</div>` : ''}
     </div>`).join('')}</div>`;
 }
 
-function renderAttendanceOverview(isTeacher, isCommunity, schoolScope) {
+// ===================== OVERVIEW TAB =====================
+function buildOverviewHTML(isCommunity) {
   let html = '';
-  // Filter bar
-  html += renderFilterBar('att-filters', [
-    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24','2022-23'] },
+  html += buildFilterBar('att-filters', [
+    { label:'School Year', key:'schoolYear', type:'select', options:['2024-25','2023-24','2022-23'] },
     { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
-    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
-    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
-    { label:'Attendance Type', key:'type', type:'select', options:['All','Excused','Unexcused','Tardy'] },
-    { label:'Date Range', key:'daterange', type:'text', value:'Aug 2024 – Jun 2025', placeholder:'Date range' },
-    { label:'Day of Week', key:'dow', type:'select', options:['All','Mon','Tue','Wed','Thu','Fri'] }
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES_ALL] },
+    { label:'Student Group', key:'group', type:'select', options:['All',...STUDENT_GROUPS] },
+    { label:'Absence Type', key:'absenceType', type:'select', options:['All','Excused','Unexcused','Tardy'] },
+    { label:'Month', key:'month', type:'select', options:['All',...MONTHS_ALL] }
   ]);
-
-  // KPIs
-  html += renderKPICards([
-    { label:'Overall Attendance Rate', value:'94.2%', sub:'District Average', trend:'+0.3% vs last year', trendUp:true, badge:'On Track', badgeClass:'bg-success-50 text-success-600' },
-    { label:'Chronically Absent Students', value:'847', sub:'≥10% absences', trend:'-2.1% vs last year', trendUp:true, badge:'Monitor', badgeClass:'bg-warning-50 text-warning-600' },
-    { label:'Average Days Absent', value:'6.8 days', sub:'Per student YTD' },
-    { label:'Perfect Attendance', value:'1,243', sub:'0 absences YTD', badge:'Celebrate', badgeClass:'bg-success-50 text-success-600' }
-  ]);
-
-  // Charts Row 1
+  html += '<div id="kpi-overview"></div>';
   html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Attendance Rate by School</h4>
-      <div id="chart-school-bar"></div>
-    </div>
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Absence Breakdown by Type</h4>
-      <div id="chart-donut"></div>
-    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Attendance Rate by School</h4><div id="chart-school-bar" class="fade-in"></div></div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Absence Breakdown by Type</h4><div id="chart-donut" class="fade-in"></div></div>
   </div>`;
-
-  // Charts Row 2
   html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Absences by Day of Week</h4>
-      <div id="chart-dow"></div>
-    </div>
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Attendance Rate Trend</h4>
-      <div id="chart-monthly"></div>
-    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Absences by Day of Week</h4><div id="chart-dow" class="fade-in"></div></div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Attendance Rate Trend</h4><div id="chart-monthly" class="fade-in"></div></div>
   </div>`;
-
-  // Student table (hide for community partner)
   if (!isCommunity) {
-    html += renderStudentTable();
+    html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-sm font-bold text-txt-primary">Student Attendance Details</h4>
+        <div class="relative"><input type="search" id="student-search" placeholder="Search students..." class="filter-select pl-8" style="min-width:200px;" value="${filters.search}"><i data-lucide="search" class="w-3.5 h-3.5 text-txt-light absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
+            <tr>
+              <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="id">Student ID <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="name">Student Name <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="school">School <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="grade">Grade <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="daysPresent">Present <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 text-right">Absent</th>
+              <th class="px-3 py-2.5">Type</th>
+              <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="attendanceRate">Rate <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+              <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="riskLevel">Risk <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody"></tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between mt-3 text-xs text-txt-muted" id="student-pagination"></div>
+    </div>`;
   }
   return html;
 }
 
-function renderStudentTable() {
-  return `<div class="bg-white rounded-xl border border-surface-border p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h4 class="text-sm font-bold text-txt-primary">Student Attendance Details</h4>
-      <div class="relative"><input type="search" id="student-search" placeholder="Search students..." class="filter-select pl-8" style="min-width:200px;"><i data-lucide="search" class="w-3.5 h-3.5 text-txt-light absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i></div>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
-          <tr>
-            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="id">Student ID <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="name">Student Name <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="school">School <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="grade">Grade <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="present">Days Present <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 text-right">Excused</th>
-            <th class="px-3 py-2.5 text-right">Unexcused</th>
-            <th class="px-3 py-2.5 text-right">Tardies</th>
-            <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="rate">Att. Rate <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="risk">Risk Level <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
-          </tr>
-        </thead>
-        <tbody id="student-tbody"></tbody>
-      </table>
-    </div>
-    <div class="flex items-center justify-between mt-3 text-xs text-txt-muted" id="student-pagination"></div>
+// ===================== QUARTERLY TAB =====================
+function buildQuarterlyHTML() {
+  let html = '';
+  html += buildFilterBar('q-filters', [
+    { label:'School Year', key:'schoolYear', type:'select', options:['2024-25','2023-24'] },
+    { label:'Quarter', key:'quarter', type:'select', options:['All','Q1','Q2','Q3','Q4'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES_ALL] },
+    { label:'Student Group', key:'group', type:'select', options:['All',...STUDENT_GROUPS] },
+    { label:'Risk Level', key:'riskLevel', type:'select', options:['All','Low','At-Risk','Moderate','Chronic'] },
+    { label:'Threshold', key:'threshold', type:'select', options:['5','10','15','20'] }
+  ]);
+  html += '<div id="kpi-quarterly"></div>';
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-1">Risk Level Transitions</h4><p class="text-xs text-txt-muted mb-4">How students distribute across risk categories</p><div id="risk-matrix-container"></div></div>`;
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Quarterly Chronic Absenteeism Rate by School</h4><div id="chart-quarterly-line" class="fade-in"></div></div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">At-Risk & Chronic Students by Grade</h4><div id="chart-risk-grade" class="fade-in"></div></div>
   </div>`;
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-3">Risk Level Criteria</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      ${[
+        { emoji:'🟢',l:'Low Risk',d:'< 5% absences (< 9 days)',bg:'bg-success-50 border-success-500/20' },
+        { emoji:'🟡',l:'At-Risk',d:'5–9.9% absences (9–17 days)',bg:'bg-warning-50 border-warning-500/20' },
+        { emoji:'🟠',l:'Moderate Risk',d:'10–19.9% absences (18–35 days)',bg:'border-orange-400/20',style:'background:#fff7ed;' },
+        { emoji:'🔴',l:'Chronic',d:'≥ 20% absences (≥ 36 days)',bg:'bg-danger-50 border-danger-500/20' }
+      ].map(r=>`<div class="rounded-lg border p-3 ${r.bg}" ${r.style?'style="'+r.style+'"':''}><div class="text-lg mb-1">${r.emoji}</div><div class="text-xs font-bold text-txt-primary">${r.l}</div><div class="text-[11px] text-txt-muted mt-1">${r.d}</div></div>`).join('')}
+    </div>
+  </div>`;
+  return html;
 }
 
-function renderStudentRows() {
-  let data = [...STUDENTS_DATA];
-  if (state.searchQuery) {
-    const q = state.searchQuery.toLowerCase();
-    data = data.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+// ===================== CHRONIC TAB =====================
+function buildChronicHTML(isCommunity) {
+  let html = '';
+  html += buildFilterBar('chr-filters', [
+    { label:'School Year', key:'schoolYear', type:'select', options:['2024-25','2023-24'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES_ALL] },
+    { label:'Student Group', key:'group', type:'select', options:['All',...STUDENT_GROUPS] },
+    { label:'Chronic Threshold', key:'threshold', type:'select', options:['10','15','20'] },
+    { label:'Intervention Status', key:'interventionStatus', type:'select', options:['All','None','Active','Pending','Completed'] }
+  ]);
+  html += '<div id="kpi-chronic"></div>';
+  html += '<div id="chronic-progress-bar"></div>';
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by Student Group</h4><div id="chart-chronic-group" class="fade-in"></div></div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by School</h4><div id="chart-chronic-school-donut" class="fade-in"></div></div>
+  </div>`;
+  if (!isCommunity) {
+    html += '<div id="intervention-table-container"></div>';
   }
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Chronic Absenteeism Rate Heatmap</h4><div id="chart-chronic-heatmap" class="fade-in"></div></div>`;
+  return html;
+}
+
+// ===================== WIRE FILTERS =====================
+function wireFilters() {
+  document.querySelectorAll('.live-filter').forEach(el => {
+    const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(eventType, () => {
+      const key = el.dataset.filter;
+      filters[key] = el.value;
+      showLoading();
+      setTimeout(() => {
+        renderCurrentDashboard();
+        hideLoading();
+      }, 60);
+    });
+  });
+
+  document.querySelectorAll('.reset-filters-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filters = { schoolYear:'2024-25', school:'All', grade:'All', group:'All', absenceType:'All', month:'All', quarter:'All', riskLevel:'All', threshold:'10', interventionStatus:'All', search:'' };
+      document.querySelectorAll('.live-filter').forEach(el => {
+        const key = el.dataset.filter;
+        if (el.tagName === 'SELECT') {
+          el.value = filters[key] || 'All';
+        } else {
+          el.value = filters[key] || '';
+        }
+      });
+      const search = document.getElementById('student-search');
+      if (search) search.value = '';
+      renderCurrentDashboard();
+    });
+  });
+
+  document.querySelectorAll('.download-csv').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = computeMetrics(filters);
+      downloadCSV('attendance_data.csv',
+        ['Student ID','Name','School','Grade','Days Present','Days Absent','Absence Type','Attendance Rate','Risk Level'],
+        m.filteredStudents.map(s => [s.id,s.name,s.school,s.grade,s.daysPresent,s.daysAbsent,s.absenceType,s.attendanceRate,s.riskLevel])
+      );
+    });
+  });
+
+  const search = document.getElementById('student-search');
+  if (search) {
+    search.addEventListener('input', e => {
+      filters.search = e.target.value;
+      state.studentPage = 1;
+      renderCurrentDashboard();
+    });
+  }
+
+  document.querySelectorAll('.sortable-th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (state.sortCol === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      else { state.sortCol = col; state.sortDir = 'asc'; }
+      renderCurrentDashboard();
+    });
+  });
+}
+
+function showLoading() {
+  const el = document.getElementById('loading-indicator');
+  if (el) el.classList.remove('hidden');
+}
+function hideLoading() {
+  const el = document.getElementById('loading-indicator');
+  if (el) el.classList.add('hidden');
+}
+
+// ===================== RENDER CURRENT DASHBOARD =====================
+function renderCurrentDashboard() {
+  const m = computeMetrics(filters);
+  const isCommunity = state.role === 'community-partner';
+
+  if (state.activeSubTab === 'overview') {
+    renderOverviewDashboard(m, isCommunity);
+  } else if (state.activeSubTab === 'quarterly') {
+    renderQuarterlyDashboard(m);
+  } else if (state.activeSubTab === 'chronic') {
+    renderChronicDashboard(m, isCommunity);
+  }
+  refreshIcons();
+}
+
+function renderOverviewDashboard(m, isCommunity) {
+  // KPIs
+  const kpiContainer = document.getElementById('kpi-overview');
+  if (kpiContainer) {
+    const onTrackBadge = m.avgAttendanceRate >= 94 ? 'On Track' : m.avgAttendanceRate >= 90 ? 'Monitor' : 'Alert';
+    const onTrackClass = m.avgAttendanceRate >= 94 ? 'bg-success-50 text-success-600' : m.avgAttendanceRate >= 90 ? 'bg-warning-50 text-warning-600' : 'bg-danger-50 text-danger-600';
+    const cards = [
+      { label:'Overall Attendance Rate', value: pct(m.avgAttendanceRate), sub:`${num(m.totalStudents)} students`, badge: onTrackBadge, badgeClass: onTrackClass, rawVal: m.avgAttendanceRate },
+      { label:'Chronically Absent Students', value: num(m.chronicallyAbsentCount), sub: `${pct(m.chronicallyAbsentPct)} of total`, badge:'Monitor', badgeClass:'bg-warning-50 text-warning-600', rawVal: m.chronicallyAbsentCount },
+      { label:'Average Days Absent', value: m.avgDaysAbsent.toFixed(1) + ' days', sub:'Per student YTD', rawVal: m.avgDaysAbsent },
+      { label:'Perfect Attendance', value: num(m.perfectAttendanceCount), sub:'0 absences YTD', badge:'Celebrate', badgeClass:'bg-success-50 text-success-600', rawVal: m.perfectAttendanceCount }
+    ];
+    updateKPIs(kpiContainer, cards, 'ov');
+  }
+
+  // Charts
+  const c1 = document.getElementById('chart-school-bar');
+  const c2 = document.getElementById('chart-donut');
+  const c3 = document.getElementById('chart-dow');
+  const c4 = document.getElementById('chart-monthly');
+  if (c1) drawStackedHBar(c1, m.bySchool);
+  if (c2) drawDonut(c2, m.byType, num(m.byType.reduce((a,t)=>a+t.count,0)));
+  if (c3) drawVerticalBar(c3, m.byDOW);
+  if (c4) drawLineChart(c4, m.monthlyTrend);
+
+  // Student table
+  if (!isCommunity) renderStudentTable(m);
+
+  refreshIcons();
+}
+
+function renderQuarterlyDashboard(m) {
+  const kpiContainer = document.getElementById('kpi-quarterly');
+  if (kpiContainer) {
+    const improveBadge = m.avgAttendanceRate >= 93 ? 'Improving' : 'Monitor';
+    const improveClass = m.avgAttendanceRate >= 93 ? 'bg-success-50 text-success-600' : 'bg-warning-50 text-warning-600';
+    const cards = [
+      { label:'Students at Risk', value: num(m.riskCounts['At-Risk'] + m.riskCounts['Moderate'] + m.riskCounts['Chronic']), sub:'Above threshold', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600', rawVal: m.riskCounts['At-Risk']+m.riskCounts['Moderate']+m.riskCounts['Chronic'] },
+      { label:'Chronic Absenteeism Rate', value: pct(m.chronicallyAbsentPct), sub:'District-wide', badge: improveBadge, badgeClass: improveClass, rawVal: m.chronicallyAbsentPct },
+      { label:'Low Risk', value: num(m.riskCounts['Low']), sub:'Students with good attendance', badge: num(m.riskCounts['Low']), badgeClass:'bg-success-50 text-success-600', rawVal: m.riskCounts['Low'] },
+      { label:'At-Risk + Moderate', value: num(m.riskCounts['At-Risk'] + m.riskCounts['Moderate']), sub:'Need monitoring', rawVal: m.riskCounts['At-Risk']+m.riskCounts['Moderate'] }
+    ];
+    updateKPIs(kpiContainer, cards, 'q');
+  }
+
+  // Risk matrix
+  const matrixC = document.getElementById('risk-matrix-container');
+  if (matrixC) {
+    const riskLabels = ['Low','At-Risk','Moderate','Chronic'];
+    const colors = ['#10b981','#f59e0b','#f97316','#ef4444'];
+    const maxVal = Math.max(...m.riskMatrix.flat(), 1);
+    let html = `<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr><th class="px-3 py-2 text-[10px] font-semibold text-txt-muted uppercase">Category</th>${riskLabels.map((l,i)=>`<th class="px-3 py-2 text-center text-[10px] font-semibold uppercase" style="color:${colors[i]}">${l}</th>`).join('')}</tr></thead><tbody>`;
+    m.riskMatrix.forEach((row,ri) => {
+      html += `<tr><td class="px-3 py-2 font-semibold" style="color:${colors[ri]}">${riskLabels[ri]}</td>`;
+      row.forEach((val,ci) => {
+        const intensity = val/maxVal;
+        const isDiag = ri===ci;
+        const alpha = Math.round(intensity*60+10);
+        const bg = isDiag ? `rgba(${ri===0?'16,185,129':ri===1?'245,158,11':ri===2?'249,115,22':'239,68,68'},0.${alpha})` : `rgba(${ri>ci?'16,185,129':'239,68,68'},0.${Math.max(5,alpha-20)})`;
+        html += `<td class="px-3 py-2 text-center font-bold tabular-nums" style="background:${bg};${isDiag?'font-weight:800;':''}">${num(val)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    matrixC.innerHTML = html;
+  }
+
+  const c1 = document.getElementById('chart-quarterly-line');
+  const c2 = document.getElementById('chart-risk-grade');
+  if (c1) drawQuarterlyLine(c1, m.quarterlyBySchool);
+  if (c2) drawGroupedHBar(c2, m.byGrade);
+  refreshIcons();
+}
+
+function renderChronicDashboard(m, isCommunity) {
+  const kpiContainer = document.getElementById('kpi-chronic');
+  if (kpiContainer) {
+    const cards = [
+      { label:'Chronically Absent', value: `${num(m.chronicallyAbsentCount)} / ${pct(m.chronicallyAbsentPct)}`, sub:`≥${m.chronicThreshold}% absences`, badge:'High', badgeClass:'bg-danger-50 text-danger-600', rawVal: m.chronicallyAbsentCount },
+      { label:'Severely Chronic (≥20%)', value: `${num(m.severelyChronicCount)} / ${pct(m.severelyChronicPct)}`, sub:'≥20% absence rate', badge:'Critical', badgeClass:'bg-danger-50 text-danger-600', rawVal: m.severelyChronicCount },
+      { label:'State Benchmark', value: `${m.chronicThreshold}.0% target`, sub:`Current: ${pct(m.chronicallyAbsentPct)}`, rawVal: m.chronicThreshold },
+      { label:'Total Filtered Students', value: num(m.totalStudents), sub:'In current filters', rawVal: m.totalStudents },
+      { label:'New Chronic This Month', value: '+'+num(m.newChronicMonth), sub:'Students newly chronic', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600', rawVal: m.newChronicMonth }
+    ];
+    updateKPIs(kpiContainer, cards, 'chr');
+  }
+
+  // Progress bar
+  const progC = document.getElementById('chronic-progress-bar');
+  if (progC) {
+    const ratio = Math.min(150, (m.chronicallyAbsentPct / m.chronicThreshold) * 100);
+    const diff = (m.chronicallyAbsentPct - m.chronicThreshold).toFixed(1);
+    progC.innerHTML = `<div class="bg-white rounded-xl border border-surface-border p-4 -mt-2">
+      <div class="flex items-center justify-between text-xs mb-2"><span class="text-txt-muted font-medium">Progress to State Benchmark</span><span class="font-bold text-txt-primary">${pct(m.chronicallyAbsentPct)} / ${m.chronicThreshold}.0% target</span></div>
+      <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden"><div class="h-full rounded-full ${ratio > 100 ? 'bg-gradient-to-r from-warning-500 to-danger-500' : 'bg-gradient-to-r from-success-500 to-brand-500'}" style="width:${Math.min(100, ratio)}%"></div></div>
+      <div class="text-[10px] text-txt-muted mt-1">${diff > 0 ? diff + ' percentage points above target' : Math.abs(diff) + ' percentage points below target ✓'}</div>
+    </div>`;
+  }
+
+  const c1 = document.getElementById('chart-chronic-group');
+  const c2 = document.getElementById('chart-chronic-school-donut');
+  const c3 = document.getElementById('chart-chronic-heatmap');
+  if (c1) drawHorizontalBar(c1, m.chronicByGroup, 500, Math.max(200, m.chronicByGroup.length * 32 + 40), parseInt(filters.threshold) || 10);
+  if (c2) drawDonut(c2, m.chronicSchoolDonut, num(m.chronicallyAbsentCount));
+  if (c3) drawHeatmap(c3, m.heatmap, MONTHS_ALL);
+
+  // Intervention table
+  if (!isCommunity) {
+    const intC = document.getElementById('intervention-table-container');
+    if (intC) {
+      if (!m.interventionStudents.length) {
+        intC.innerHTML = '<div class="bg-white rounded-xl border border-surface-border p-8 text-center"><p class="text-sm font-semibold text-txt-primary">No students requiring intervention</p><p class="text-xs text-txt-muted mt-1">Adjust filters to see intervention data.</p></div>';
+      } else {
+        intC.innerHTML = `<div class="bg-white rounded-xl border border-surface-border p-5">
+          <h4 class="text-sm font-bold text-txt-primary mb-4">Students Requiring Intervention</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
+                <tr><th class="px-3 py-2.5">Name</th><th class="px-3 py-2.5">School</th><th class="px-3 py-2.5">Gr</th><th class="px-3 py-2.5 text-right">Absent</th><th class="px-3 py-2.5 text-right">Rate</th><th class="px-3 py-2.5">Risk</th><th class="px-3 py-2.5">Counselor</th><th class="px-3 py-2.5">Status</th><th class="px-3 py-2.5">Notes</th></tr>
+              </thead>
+              <tbody>${m.interventionStudents.map((s,i) => `<tr class="${i%2?'bg-gray-50/50':''} hover:bg-brand-50/30">
+                <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
+                <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
+                <td class="px-3 py-2.5">${s.grade}</td>
+                <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${s.absent}</td>
+                <td class="px-3 py-2.5 text-right tabular-nums">${pct(s.rate)}</td>
+                <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.risk)}">${s.risk}</span></td>
+                <td class="px-3 py-2.5 text-txt-muted">${s.counselor}</td>
+                <td class="px-3 py-2.5"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.status==='Active'?'bg-success-50 text-success-600':s.status==='Pending'?'bg-warning-50 text-warning-600':s.status==='Completed'?'bg-brand-50 text-brand-600':'bg-gray-100 text-txt-muted'}">${s.status}</span></td>
+                <td class="px-3 py-2.5 text-txt-muted max-w-[160px] truncate" title="${s.notes}">${s.notes}</td>
+              </tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+    }
+  }
+  refreshIcons();
+}
+
+// ===================== KPI UPDATE WITH ANIMATION =====================
+function updateKPIs(container, cards, prefix) {
+  const existing = container.querySelector('.grid');
+  if (!existing) {
+    container.innerHTML = buildKPIHTML(cards, prefix);
+    cards.forEach((c,i) => {
+      prevKPIs[prefix+'-'+i] = c.rawVal || 0;
+    });
+    refreshIcons();
+    return;
+  }
+  // Update existing
+  cards.forEach((c,i) => {
+    const valEl = container.querySelector(`[data-kpi="${prefix}-${i}"]`);
+    if (valEl) {
+      const prevVal = parseFloat(valEl.getAttribute('data-prev') || '0');
+      const newVal = c.rawVal || 0;
+      if (Math.abs(prevVal - newVal) > 0.01) {
+        flashKPI(valEl);
+        if (typeof newVal === 'number' && !isNaN(newVal)) {
+          const isP = c.value.includes('%') && !c.value.includes('/');
+          const hasDays = c.value.includes('days');
+          if (isP) {
+            animateNumber(valEl, prevVal, newVal, true, '', 400);
+          } else if (hasDays) {
+            const startTime = performance.now();
+            const dur = 400;
+            const tick = (now) => {
+              const p = Math.min(1, (now - startTime) / dur);
+              const ease = 1 - Math.pow(1 - p, 3);
+              const cur = prevVal + (newVal - prevVal) * ease;
+              valEl.textContent = cur.toFixed(1) + ' days';
+              if (p < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          } else {
+            animateNumber(valEl, prevVal, newVal, false, '', 400);
+          }
+        } else {
+          valEl.textContent = c.value;
+        }
+        valEl.setAttribute('data-prev', newVal);
+      } else {
+        valEl.textContent = c.value;
+      }
+    }
+    const subEl = container.querySelector(`[data-kpisub="${prefix}-${i}"]`);
+    if (subEl) subEl.textContent = c.sub;
+  });
+}
+
+// ===================== STUDENT TABLE =====================
+function renderStudentTable(m) {
+  let data = [...m.filteredStudents];
   if (state.sortCol) {
     data.sort((a,b) => {
       let va = a[state.sortCol], vb = b[state.sortCol];
@@ -884,497 +1382,209 @@ function renderStudentRows() {
       return state.sortDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
     });
   }
-  const total = 4521;
-  const start = (state.studentPage-1)*10;
+  const PAGE_SIZE = 15;
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  if (state.studentPage > totalPages) state.studentPage = totalPages;
+  const start = (state.studentPage - 1) * PAGE_SIZE;
+  const pageData = data.slice(start, start + PAGE_SIZE);
+
   const tbody = document.getElementById('student-tbody');
   if (!tbody) return;
-  tbody.innerHTML = data.map((s,i) => `<tr class="${i%2===0?'':'bg-gray-50/50'} hover:bg-brand-50/30 transition-colors">
-    <td class="px-3 py-2.5 tabular-nums font-medium text-brand-500">${s.id}</td>
-    <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
-    <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
-    <td class="px-3 py-2.5 text-center">${s.grade}</td>
-    <td class="px-3 py-2.5 text-right tabular-nums">${s.present}</td>
-    <td class="px-3 py-2.5 text-right tabular-nums">${s.excAbsent}</td>
-    <td class="px-3 py-2.5 text-right tabular-nums">${s.unexAbsent}</td>
-    <td class="px-3 py-2.5 text-right tabular-nums">${s.tardies}</td>
-    <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${pct(s.rate)}</td>
-    <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.risk)}">${s.risk}</span></td>
-  </tr>`).join('');
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-12 text-center text-sm text-txt-muted">No students match the current filters. <button class="text-brand-500 underline table-reset-btn">Reset filters</button></td></tr>`;
+    const resetBtn = tbody.querySelector('.table-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        filters = { schoolYear:'2024-25', school:'All', grade:'All', group:'All', absenceType:'All', month:'All', quarter:'All', riskLevel:'All', threshold:'10', interventionStatus:'All', search:'' };
+        document.querySelectorAll('.live-filter').forEach(el => {
+          el.value = filters[el.dataset.filter] || 'All';
+        });
+        const search = document.getElementById('student-search');
+        if (search) search.value = '';
+        renderCurrentDashboard();
+      });
+    }
+  } else {
+    tbody.innerHTML = pageData.map((s,i) => `<tr class="${i%2===0?'':'bg-gray-50/50'} hover:bg-brand-50/30 transition-colors">
+      <td class="px-3 py-2.5 tabular-nums font-medium text-brand-500">${s.id}</td>
+      <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
+      <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
+      <td class="px-3 py-2.5 text-center">${s.grade}</td>
+      <td class="px-3 py-2.5 text-right tabular-nums">${s.daysPresent}</td>
+      <td class="px-3 py-2.5 text-right tabular-nums">${s.daysAbsent}</td>
+      <td class="px-3 py-2.5"><span class="text-[10px] font-semibold">${s.absenceType}</span></td>
+      <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${pct(s.attendanceRate)}</td>
+      <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.riskLevel)}">${s.riskLevel}</span></td>
+    </tr>`).join('');
+  }
+
   const pag = document.getElementById('student-pagination');
-  if (pag) pag.innerHTML = `<span>Showing ${start+1}–${Math.min(start+10,total)} of ${num(total)} students</span><div class="flex gap-1"><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50" disabled>Previous</button><button class="px-3 py-1 bg-brand-500 text-white rounded text-xs">1</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">2</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">3</button><span class="px-1">…</span><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">453</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">Next</button></div>`;
-}
-
-function renderOverviewCharts(isCommunity) {
-  const c1 = document.getElementById('chart-school-bar');
-  const c2 = document.getElementById('chart-donut');
-  const c3 = document.getElementById('chart-dow');
-  const c4 = document.getElementById('chart-monthly');
-  if (c1) createStackedHBar(c1, ATTENDANCE_BY_SCHOOL);
-  if (c2) createDonut(c2, ABSENCE_BY_TYPE, '12,847');
-  if (c3) createVerticalBar(c3, ABSENCE_BY_DOW);
-  if (c4) createLineChart(c4, MONTHLY_TREND);
-  if (!isCommunity) renderStudentRows();
-}
-
-// ===================== QUARTERLY RISK =====================
-function renderQuarterlyRisk(isTeacher, isCommunity) {
-  let html = '';
-  html += renderFilterBar('q-filters', [
-    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
-    { label:'Quarter', key:'quarter', type:'select', options:['All','Q1','Q2','Q3','Q4'] },
-    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
-    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
-    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
-    { label:'Risk Level', key:'risk', type:'select', options:['All','Low','At-Risk','Moderate','Chronic'] },
-    { label:'Threshold', key:'threshold', type:'select', options:['5%','10%','15%','20%'] }
-  ]);
-
-  html += renderKPICards([
-    { label:'Students at Risk This Quarter', value:'1,124', sub:'5%+ absence rate', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600' },
-    { label:'Chronic Absenteeism Rate', value:'8.7%', sub:'District-wide', trend:'-0.4% vs last quarter', trendUp:true, badge:'Improving', badgeClass:'bg-success-50 text-success-600' },
-    { label:'Improved Since Last Quarter', value:'312', sub:'Moved to lower risk', badge:'+312', badgeClass:'bg-success-50 text-success-600' },
-    { label:'Worsened Since Last Quarter', value:'189', sub:'Moved to higher risk', badge:'+189', badgeClass:'bg-danger-50 text-danger-600' }
-  ]);
-
-  // Risk Transition Matrix
-  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
-    <h4 class="text-sm font-bold text-txt-primary mb-1">Risk Level Transitions Q2 → Q3</h4>
-    <p class="text-xs text-txt-muted mb-4">How students moved between risk categories</p>
-    <div id="risk-matrix-container"></div>
-  </div>`;
-
-  // Charts row
-  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Quarterly Chronic Absenteeism Rate by School</h4>
-      <div id="chart-quarterly-line"></div>
-    </div>
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">At-Risk & Chronic Students by Grade</h4>
-      <div id="chart-risk-grade"></div>
-    </div>
-  </div>`;
-
-  // Risk criteria
-  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
-    <h4 class="text-sm font-bold text-txt-primary mb-3">Risk Level Criteria</h4>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      ${[
-        { emoji:'🟢', l:'Low Risk', d:'< 5% absences (< 9 days)', bg:'bg-success-50 border-success-500/20' },
-        { emoji:'🟡', l:'At-Risk', d:'5–9.9% absences (9–17 days)', bg:'bg-warning-50 border-warning-500/20' },
-        { emoji:'🟠', l:'Moderate Risk', d:'10–19.9% absences (18–35 days)', bg:'bg-orange-50 border-orange-400/20', style:'background:#fff7ed;' },
-        { emoji:'🔴', l:'Chronic', d:'≥ 20% absences (≥ 36 days)', bg:'bg-danger-50 border-danger-500/20' }
-      ].map(r => `<div class="rounded-lg border p-3 ${r.bg}" ${r.style?'style="'+r.style+'"':''}>
-        <div class="text-lg mb-1">${r.emoji}</div>
-        <div class="text-xs font-bold text-txt-primary">${r.l}</div>
-        <div class="text-[11px] text-txt-muted mt-1">${r.d}</div>
-      </div>`).join('')}
-    </div>
-    <p class="text-[11px] text-txt-muted mt-3 italic">Based on 180-day school year. Thresholds adjustable via filter.</p>
-  </div>`;
-  return html;
-}
-
-function renderRiskMatrix() {
-  const c = document.getElementById('risk-matrix-container');
-  if (!c) return;
-  const colors = ['#10b981','#f59e0b','#f97316','#ef4444'];
-  const bgColors = ['bg-success-50','bg-warning-50','','bg-danger-50'];
-  const maxVal = Math.max(...RISK_MATRIX.flat());
-
-  let html = `<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr>
-    <th class="px-3 py-2 text-[10px] font-semibold text-txt-muted uppercase">Q2 ↓ / Q3 →</th>
-    ${RISK_LABELS.map((l,i) => `<th class="px-3 py-2 text-center text-[10px] font-semibold uppercase" style="color:${colors[i]}">${l}</th>`).join('')}
-    </tr></thead><tbody>`;
-  RISK_MATRIX.forEach((row,ri) => {
-    html += `<tr><td class="px-3 py-2 font-semibold" style="color:${colors[ri]}">${RISK_LABELS[ri]}</td>`;
-    row.forEach((val,ci) => {
-      const intensity = val / maxVal;
-      const isDiag = ri === ci;
-      const alpha = Math.round(intensity * 60 + 10);
-      const bg = isDiag ? `rgba(${ri===0?'16,185,129':ri===1?'245,158,11':ri===2?'249,115,22':'239,68,68'},0.${alpha})` : `rgba(${ri>ci?'16,185,129':'239,68,68'},0.${Math.max(5,alpha-20)})`;
-      html += `<td class="px-3 py-2 text-center font-bold tabular-nums" style="background:${bg};${isDiag?'font-weight:800;':''}"><span>${num(val)}</span></td>`;
+  if (pag && data.length) {
+    let pagHTML = `<span>Showing ${start+1}–${Math.min(start+PAGE_SIZE, data.length)} of ${num(data.length)} students</span><div class="flex gap-1">`;
+    pagHTML += `<button class="pag-btn px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50 ${state.studentPage<=1?'opacity-40':''}" data-page="${state.studentPage-1}" ${state.studentPage<=1?'disabled':''}>Prev</button>`;
+    const maxBtns = 5;
+    let startP = Math.max(1, state.studentPage - 2);
+    let endP = Math.min(totalPages, startP + maxBtns - 1);
+    if (endP - startP < maxBtns - 1) startP = Math.max(1, endP - maxBtns + 1);
+    for (let p = startP; p <= endP; p++) {
+      pagHTML += `<button class="pag-btn px-3 py-1 ${p===state.studentPage?'bg-brand-500 text-white':'border border-surface-border hover:bg-gray-50'} rounded text-xs" data-page="${p}">${p}</button>`;
+    }
+    if (endP < totalPages) pagHTML += `<span class="px-1">…</span><button class="pag-btn px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50" data-page="${totalPages}">${totalPages}</button>`;
+    pagHTML += `<button class="pag-btn px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50 ${state.studentPage>=totalPages?'opacity-40':''}" data-page="${state.studentPage+1}" ${state.studentPage>=totalPages?'disabled':''}>Next</button></div>`;
+    pag.innerHTML = pagHTML;
+    pag.querySelectorAll('.pag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (p >= 1 && p <= totalPages) {
+          state.studentPage = p;
+          renderStudentTable(computeMetrics(filters));
+        }
+      });
     });
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-  c.innerHTML = html;
-}
-
-function renderQuarterlyCharts() {
-  renderRiskMatrix();
-  const c1 = document.getElementById('chart-quarterly-line');
-  const c2 = document.getElementById('chart-risk-grade');
-  if (c1) createQuarterlyLineChart(c1, QUARTERLY_CHRONIC);
-  if (c2) createGroupedHBar(c2, RISK_BY_GRADE);
-}
-
-// ===================== CHRONIC ABSENTEEISM =====================
-function renderChronicAbsenteeism(isTeacher, isCommunity) {
-  let html = '';
-  html += renderFilterBar('chr-filters', [
-    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
-    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
-    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
-    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
-    { label:'Chronic Threshold', key:'threshold', type:'select', options:['10%','15%','20%'] },
-    { label:'Intervention Status', key:'intervention', type:'select', options:['All','None','Active','Completed'] }
-  ]);
-
-  html += renderKPICards([
-    { label:'Chronically Absent', value:'847 / 8.7%', sub:'Students at ≥10% absence', badge:'High', badgeClass:'bg-danger-50 text-danger-600' },
-    { label:'Severely Chronic (≥20%)', value:'213 / 2.2%', sub:'Students at ≥20% absence', badge:'Critical', badgeClass:'bg-danger-50 text-danger-600' },
-    { label:'State Benchmark', value:'8.0% target', sub:'Current: 8.7% vs Target: 8.0%' },
-    { label:'Improved YTD', value:'156', sub:'Moved to lower risk', badge:'↓', badgeClass:'bg-success-50 text-success-600' },
-    { label:'New Chronic This Month', value:'+34', sub:'Students newly chronic', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600' }
-  ]);
-
-  // Progress bar for state benchmark
-  html += `<div class="bg-white rounded-xl border border-surface-border p-4 -mt-2">
-    <div class="flex items-center justify-between text-xs mb-2"><span class="text-txt-muted font-medium">Progress to State Benchmark</span><span class="font-bold text-txt-primary">8.7% / 8.0% target</span></div>
-    <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-warning-500 to-danger-500" style="width:${Math.min(100, (8.7/8.0)*100)}%"></div></div>
-    <div class="text-[10px] text-txt-muted mt-1">0.7 percentage points above target</div>
-  </div>`;
-
-  // Demographic charts
-  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by Student Group</h4>
-      <div id="chart-chronic-group"></div>
-    </div>
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by School</h4>
-      <div id="chart-chronic-school-donut"></div>
-    </div>
-  </div>`;
-
-  // Intervention table
-  if (!isCommunity) {
-    html += `<div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Students Requiring Intervention</h4>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
-            <tr><th class="px-3 py-2.5">Student Name</th><th class="px-3 py-2.5">School</th><th class="px-3 py-2.5">Grade</th><th class="px-3 py-2.5 text-right">Days Absent</th><th class="px-3 py-2.5 text-right">Absence Rate</th><th class="px-3 py-2.5">Risk Level</th><th class="px-3 py-2.5">Counselor</th><th class="px-3 py-2.5">Status</th><th class="px-3 py-2.5">Last Contact</th><th class="px-3 py-2.5">Notes</th></tr>
-          </thead>
-          <tbody>${INTERVENTION_STUDENTS.map((s,i) => `<tr class="${i%2?'bg-gray-50/50':''} hover:bg-brand-50/30">
-            <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
-            <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
-            <td class="px-3 py-2.5">${s.grade}</td>
-            <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${s.absent}</td>
-            <td class="px-3 py-2.5 text-right tabular-nums">${pct(s.rate)}</td>
-            <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.risk)}">${s.risk}</span></td>
-            <td class="px-3 py-2.5 text-txt-muted">${s.counselor}</td>
-            <td class="px-3 py-2.5"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.status==='Active'?'bg-success-50 text-success-600':s.status==='Pending'?'bg-warning-50 text-warning-600':'bg-gray-100 text-txt-muted'}">${s.status}</span></td>
-            <td class="px-3 py-2.5 text-txt-muted tabular-nums">${s.lastContact}</td>
-            <td class="px-3 py-2.5 text-txt-muted max-w-[160px] truncate" title="${s.notes}">${s.notes}</td>
-          </tr>`).join('')}</tbody>
-        </table>
-      </div>
-    </div>`;
+  } else if (pag) {
+    pag.innerHTML = '';
   }
-
-  // Heatmap
-  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
-    <h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Chronic Absenteeism Rate Heatmap</h4>
-    <div id="chart-chronic-heatmap"></div>
-  </div>`;
-  return html;
-}
-
-function renderChronicCharts() {
-  const c1 = document.getElementById('chart-chronic-group');
-  const c2 = document.getElementById('chart-chronic-school-donut');
-  const c3 = document.getElementById('chart-chronic-heatmap');
-  if (c1) createHorizontalBar(c1, CHRONIC_BY_GROUP);
-  if (c2) {
-    const schoolChronic = [
-      { label:'Washington High', pct:38, count:322, color:'#ef4444' },
-      { label:'Lincoln Middle', pct:24, count:203, color:'#3b82f6' },
-      { label:'Roosevelt K-8', pct:16, count:136, color:'#8b5cf6' },
-      { label:'Adams Elem.', pct:12, count:102, color:'#f59e0b' },
-      { label:'Jefferson Elem.', pct:10, count:84, color:'#10b981' }
-    ];
-    createDonut(c2, schoolChronic, '847');
-  }
-  if (c3) createHeatmap(c3, CHRONIC_HEATMAP, MONTHS_SHORT);
 }
 
 // ===================== ASSESSMENTS =====================
 function renderAssessments(main) {
   let html = '<div class="p-5 space-y-5 fade-in">';
-
-  // Report selector
   const assessments = [
-    { n:'NWEA MAP Growth', icon:'bar-chart-3', active:true },
-    { n:'Acadience Reading', icon:'book-open' },
-    { n:'CAASPP/SBAC', icon:'file-check' },
-    { n:'ACT', icon:'award' },
-    { n:'SAT', icon:'award' },
-    { n:'AP Exams', icon:'graduation-cap' },
-    { n:'aimsweb Plus', icon:'activity' },
-    { n:'iReady', icon:'monitor' },
-    { n:'ELPAC', icon:'languages' },
-    { n:'PSAT', icon:'file-text' },
-    { n:'NAEP', icon:'chart-bar' },
-    { n:'District Benchmark', icon:'target' },
-    { n:'Teacher-Created', icon:'pencil' },
-    { n:'DIBELS', icon:'book' },
-    { n:'FastBridge', icon:'zap' }
+    { n:'NWEA MAP Growth',icon:'bar-chart-3',active:true },{ n:'Acadience Reading',icon:'book-open' },
+    { n:'CAASPP/SBAC',icon:'file-check' },{ n:'ACT',icon:'award' },{ n:'SAT',icon:'award' },
+    { n:'AP Exams',icon:'graduation-cap' },{ n:'aimsweb Plus',icon:'activity' },{ n:'iReady',icon:'monitor' },
+    { n:'ELPAC',icon:'languages' },{ n:'PSAT',icon:'file-text' },{ n:'NAEP',icon:'bar-chart-3' },
+    { n:'District Benchmark',icon:'target' },{ n:'Teacher-Created',icon:'pencil' },{ n:'DIBELS',icon:'book-open' },{ n:'FastBridge',icon:'zap' }
   ];
-  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
-    <h4 class="text-sm font-bold text-txt-primary mb-3">Select Assessment Report</h4>
-    <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2">
-      ${assessments.map(a => `<button class="assess-btn flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-medium transition-all ${a.active?'border-brand-500 bg-brand-50 text-brand-600':'border-surface-border text-txt-muted hover:border-brand-300 hover:bg-brand-50/50'}" data-assess="${a.n}">
-        <i data-lucide="${a.icon}" class="w-5 h-5"></i><span class="text-center leading-tight">${a.n}</span>
-      </button>`).join('')}
-    </div>
-  </div>`;
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-3">Select Assessment Report</h4>
+    <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2">${assessments.map(a => `<button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-medium transition-all ${a.active?'border-brand-500 bg-brand-50 text-brand-600':'border-surface-border text-txt-muted hover:border-brand-300 hover:bg-brand-50/50'}"><i data-lucide="${a.icon}" class="w-5 h-5"></i><span class="text-center leading-tight">${a.n}</span></button>`).join('')}</div></div>`;
 
-  // NWEA MAP Growth content
-  html += renderFilterBar('assess-filters', [
-    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
-    { label:'Term', key:'term', type:'select', options:['All','Fall','Winter','Spring'] },
+  html += buildFilterBar('assess-filters', [
+    { label:'School Year', key:'schoolYear', type:'select', options:['2024-25','2023-24'] },
     { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
-    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
-    { label:'Subject', key:'subject', type:'select', options:['All','Reading','Math','Science'] },
-    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS }
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES_ALL] },
+    { label:'Subject', key:'absenceType', type:'select', options:['All','Reading','Math','Science'] },
+    { label:'Student Group', key:'group', type:'select', options:['All',...STUDENT_GROUPS] }
   ]);
 
-  html += renderKPICards([
-    { label:'Mean RIT Score', value:'214.3', sub:'District Average, All Subjects' },
-    { label:'% Met/Exceeded Growth', value:'62%', sub:'Of students tested', badge:'Good', badgeClass:'bg-success-50 text-success-600' },
-    { label:'% Above Grade Norms', value:'48%', sub:'Scoring above national norm' },
-    { label:'Avg Growth Points', value:'4.2', sub:'Points of growth, Fall→Spring', trend:'+0.8 vs prior year', trendUp:true }
-  ]);
-
-  // Score Distribution
-  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">RIT Score Distribution</h4>
-      <div id="chart-rit-dist"></div>
-    </div>
-    <div class="bg-white rounded-xl border border-surface-border p-5">
-      <h4 class="text-sm font-bold text-txt-primary mb-4">Growth vs Achievement</h4>
-      <div id="chart-growth-scatter"></div>
-    </div>
+  html += `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="kpi-card"><div class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider mb-1">Mean RIT Score</div><div class="text-2xl font-bold text-txt-primary tabular-nums">214.3</div><div class="text-xs text-txt-muted mt-1">District Average, All Subjects</div></div>
+    <div class="kpi-card"><div class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider mb-1">% Met/Exceeded Growth</div><div class="text-2xl font-bold text-txt-primary tabular-nums">62%</div><div class="text-xs text-txt-muted mt-1">Of students tested</div></div>
+    <div class="kpi-card"><div class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider mb-1">% Above Grade Norms</div><div class="text-2xl font-bold text-txt-primary tabular-nums">48%</div><div class="text-xs text-txt-muted mt-1">Scoring above national norm</div></div>
+    <div class="kpi-card"><div class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider mb-1">Avg Growth Points</div><div class="text-2xl font-bold text-txt-primary tabular-nums">4.2</div><div class="text-xs text-txt-muted mt-1">Fall→Spring</div></div>
   </div>`;
 
-  html += '</div>';
-  html += '<footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>';
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">RIT Score Distribution</h4><div id="chart-rit-dist"></div></div>
+    <div class="bg-white rounded-xl border border-surface-border p-5"><h4 class="text-sm font-bold text-txt-primary mb-4">Growth vs Achievement</h4><div id="chart-growth-scatter"></div></div>
+  </div>`;
+  html += '</div><footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>';
   main.innerHTML = html;
 
   setTimeout(() => {
     renderAssessmentCharts();
+    wireFilters();
     refreshIcons();
-    attachFilterListeners();
-    attachDownloadListeners();
   }, 50);
 }
 
 function renderAssessmentCharts() {
-  // RIT Distribution (histogram)
   const c1 = document.getElementById('chart-rit-dist');
   if (c1) {
-    const bins = [
-      { range:'160-170', count:120 },{ range:'170-180', count:340 },{ range:'180-190', count:620 },
-      { range:'190-200', count:980 },{ range:'200-210', count:1240 },{ range:'210-220', count:1180 },
-      { range:'220-230', count:890 },{ range:'230-240', count:540 },{ range:'240-250', count:280 },{ range:'250-260', count:110 }
-    ];
-    const w=520, h=240, margin={t:10,r:20,b:40,l:50};
-    const cw=w-margin.l-margin.r, ch=h-margin.t-margin.b;
-    const maxVal = Math.max(...bins.map(b=>b.count))*1.1;
-    const barW = cw/bins.length - 2;
-    const svg = svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
-    for(let i=0;i<=4;i++){
-      const y=margin.t+(i/4)*ch;
-      svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));
-      svg.appendChild(svgEl('text',{x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif'},num(Math.round(maxVal*(1-i/4)))));
-    }
-    // Norm line at 210-220 bin
-    const normX = margin.l + 5*(cw/bins.length) + barW/2;
+    const bins = [{range:'160-170',count:120},{range:'170-180',count:340},{range:'180-190',count:620},{range:'190-200',count:980},{range:'200-210',count:1240},{range:'210-220',count:1180},{range:'220-230',count:890},{range:'230-240',count:540},{range:'240-250',count:280},{range:'250-260',count:110}];
+    const w=520,h=240,margin={t:10,r:20,b:40,l:50};
+    const cw=w-margin.l-margin.r,ch=h-margin.t-margin.b;
+    const maxVal=Math.max(...bins.map(b=>b.count))*1.1;
+    const barW=cw/bins.length-2;
+    const svg=svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
+    for(let i=0;i<=4;i++){const y=margin.t+(i/4)*ch;svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));svg.appendChild(svgEl('text',{x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif'},num(Math.round(maxVal*(1-i/4)))));}
+    const normX=margin.l+5*(cw/bins.length)+barW/2;
     svg.appendChild(svgEl('line',{x1:normX,y1:margin.t,x2:normX,y2:h-margin.b,stroke:'#10b981','stroke-width':'1','stroke-dasharray':'5,3'}));
     svg.appendChild(svgEl('text',{x:normX+4,y:margin.t+12,fill:'#10b981','font-size':'9','font-family':'Inter,sans-serif'},'Grade Norm'));
-
-    bins.forEach((b,i) => {
-      const x=margin.l+i*(cw/bins.length)+1;
-      const bh=(b.count/maxVal)*ch;
-      const y=margin.t+ch-bh;
-      svg.appendChild(svgEl('rect',{x:x,y:y,width:barW,height:bh,fill:'#3b82f6',rx:'1',class:'chart-bar','data-tip':`${b.range} RIT\n${num(b.count)} students`}));
-      svg.appendChild(svgEl('text',{x:x+barW/2,y:h-margin.b+14,fill:'#64748b','font-size':'9','text-anchor':'middle','font-family':'Inter,sans-serif',transform:`rotate(-30,${x+barW/2},${h-margin.b+14})`},b.range));
-    });
-    c1.innerHTML='';
-    c1.appendChild(svg);
-    attachChartTooltips(c1);
+    bins.forEach((b,i)=>{const x=margin.l+i*(cw/bins.length)+1;const bh=(b.count/maxVal)*ch;const y=margin.t+ch-bh;svg.appendChild(svgEl('rect',{x:x,y:y,width:barW,height:bh,fill:'#3b82f6',rx:'1',class:'chart-bar','data-tip':`${b.range} RIT\n${num(b.count)} students`}));svg.appendChild(svgEl('text',{x:x+barW/2,y:h-margin.b+14,fill:'#64748b','font-size':'9','text-anchor':'middle','font-family':'Inter,sans-serif',transform:`rotate(-30,${x+barW/2},${h-margin.b+14})`},b.range));});
+    c1.innerHTML='';c1.appendChild(svg);attachChartTooltips(c1);
   }
-
-  // Growth scatter
   const c2 = document.getElementById('chart-growth-scatter');
   if (c2) {
     const w=520,h=260,margin={t:20,r:20,b:40,l:50};
     const cw=w-margin.l-margin.r,ch=h-margin.t-margin.b;
-    const svg = svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
-    // Grid
-    for(let i=0;i<=4;i++){
-      const y=margin.t+(i/4)*ch;
-      svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));
-    }
+    const svg=svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
+    for(let i=0;i<=4;i++){const y=margin.t+(i/4)*ch;svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));}
     svg.appendChild(svgEl('text',{x:w/2,y:h-4,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif'},'Fall RIT Score'));
     svg.appendChild(svgEl('text',{x:14,y:h/2,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif',transform:`rotate(-90,14,${h/2})`},'Growth Points'));
-
-    // Scatter points
-    const points = [];
-    for(let i=0;i<60;i++){
-      const fallRIT = 170 + Math.random()*80;
-      const growth = -2 + Math.random()*14;
-      const met = growth >= 4;
-      points.push({fallRIT, growth, met});
-    }
     const xMin=170,xMax=250,yMin2=-2,yMax2=12;
-    points.forEach(p => {
-      const x = margin.l + ((p.fallRIT-xMin)/(xMax-xMin))*cw;
-      const y = margin.t + ((yMax2-p.growth)/(yMax2-yMin2))*ch;
-      svg.appendChild(svgEl('circle',{cx:x,cy:y,r:'4',fill:p.met?'#10b981':'#ef4444',opacity:'0.7',class:'chart-bar','data-tip':`Fall RIT: ${Math.round(p.fallRIT)}\nGrowth: ${p.growth.toFixed(1)}\n${p.met?'Met Target':'Below Target'}`}));
-    });
-    // Target line at growth=4
-    const tY = margin.t + ((yMax2-4)/(yMax2-yMin2))*ch;
+    for(let i=0;i<60;i++){
+      const fallRIT=170+seededVal(i*31+7,0,80);
+      const growth=-2+seededVal(i*17+3,0,14);
+      const met=growth>=4;
+      const x=margin.l+((fallRIT-xMin)/(xMax-xMin))*cw;
+      const y=margin.t+((yMax2-growth)/(yMax2-yMin2))*ch;
+      svg.appendChild(svgEl('circle',{cx:x,cy:y,r:'4',fill:met?'#10b981':'#ef4444',opacity:'0.7',class:'chart-bar','data-tip':`Fall RIT: ${Math.round(fallRIT)}\nGrowth: ${growth.toFixed(1)}\n${met?'Met Target':'Below Target'}`}));
+    }
+    const tY=margin.t+((yMax2-4)/(yMax2-yMin2))*ch;
     svg.appendChild(svgEl('line',{x1:margin.l,y1:tY,x2:w-margin.r,y2:tY,stroke:'#64748b','stroke-width':'1','stroke-dasharray':'4,3'}));
     svg.appendChild(svgEl('text',{x:w-margin.r+2,y:tY-4,fill:'#64748b','font-size':'9','font-family':'Inter,sans-serif'},'Target'));
-
-    c2.innerHTML='';
-    c2.appendChild(svg);
-    const legend = document.createElement('div');
-    legend.className='flex gap-4 mt-2 justify-center';
-    legend.innerHTML='<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-success-500"></div>Met Growth Target</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-danger-500"></div>Below Target</div>';
-    c2.appendChild(legend);
-    attachChartTooltips(c2);
+    c2.innerHTML='';c2.appendChild(svg);
+    const legend=document.createElement('div');legend.className='flex gap-4 mt-2 justify-center';
+    legend.innerHTML='<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-success-500"></div>Met Growth</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-danger-500"></div>Below Target</div>';
+    c2.appendChild(legend);attachChartTooltips(c2);
   }
 }
 
-// ===================== EVENT HANDLERS =====================
-function attachFilterListeners() {
-  // Filters are visual prototype — they show interactivity
-  document.querySelectorAll('.filter-select').forEach(sel => {
-    sel.addEventListener('change', () => {/* prototype */});
-  });
-}
-
-function attachTableListeners() {
-  const search = document.getElementById('student-search');
-  if (search) {
-    search.addEventListener('input', e => {
-      state.searchQuery = e.target.value;
-      renderStudentRows();
-    });
+// ===================== SIDEBAR =====================
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  const sidebar = document.getElementById('sidebar');
+  if (state.sidebarCollapsed) {
+    sidebar.style.width = '64px'; sidebar.style.minWidth = '64px'; sidebar.classList.add('sidebar-collapsed');
+  } else {
+    sidebar.style.width = '220px'; sidebar.style.minWidth = '220px'; sidebar.classList.remove('sidebar-collapsed');
   }
-  document.querySelectorAll('.sortable-th').forEach(th => {
-    th.addEventListener('click', () => {
-      const col = th.dataset.sort;
-      if (state.sortCol === col) {
-        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        state.sortCol = col;
-        state.sortDir = 'asc';
-      }
-      renderStudentRows();
-    });
-  });
 }
 
-function attachDownloadListeners() {
-  document.querySelectorAll('.download-csv').forEach(btn => {
-    btn.addEventListener('click', () => {
-      downloadCSV('attendance_data.csv',
-        ['Student ID','Name','School','Grade','Days Present','Excused Absent','Unexcused Absent','Tardies','Attendance Rate','Risk Level'],
-        STUDENTS_DATA.map(s => [s.id,s.name,s.school,s.grade,s.present,s.excAbsent,s.unexAbsent,s.tardies,s.rate,s.risk])
-      );
-    });
-  });
-}
-
-function refreshIcons() {
-  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-    lucide.createIcons();
+function updateRole(role) {
+  state.role = role;
+  const banner = document.getElementById('role-banner');
+  const bannerText = document.getElementById('role-banner-text');
+  if (role === 'district-admin') {
+    banner.classList.add('hidden');
+  } else {
+    banner.classList.remove('hidden');
+    const labels = { 'school-admin':'Viewing as: School Admin – Data scoped to your assigned school(s)', 'teacher':'Viewing as: Teacher – Data scoped to Lincoln Middle School', 'community-partner':'Viewing as: Community Partner – Student-level detail is hidden' };
+    bannerText.textContent = labels[role] || '';
   }
+  renderContent();
 }
 
 // ===================== SCHEMA MODAL =====================
 function renderSchemaModal() {
-  const body = $('#schema-body');
-  body.innerHTML = `
-    <div>
-      <h3 class="text-sm font-bold text-txt-primary mb-3">Core Tables</h3>
-      <div class="space-y-3">
-        ${[
-          { name:'students', cols:'student_id, district_id, school_id, grade, dob, gender, race_ethnicity, el_status, sped_status, free_reduced_lunch, foster_youth, homeless, enrollment_date' },
-          { name:'attendance_records', cols:'record_id, student_id, school_id, date, period, attendance_code, attendance_type, absence_reason, excused_flag, tardy_flag, minutes_absent' },
-          { name:'schools', cols:'school_id, district_id, school_name, school_type, principal_name, address, phone, grades_served' },
-          { name:'assessment_scores', cols:'score_id, student_id, school_id, assessment_name, subject, term, test_date, raw_score, scale_score, percentile, proficiency_level, growth_points, national_norm_rit' },
-          { name:'interventions', cols:'intervention_id, student_id, assigned_staff_id, intervention_type, start_date, end_date, status, notes, last_contact_date' }
-        ].map(t => `<div class="bg-gray-50 rounded-lg p-3">
-          <div class="text-xs font-bold text-brand-600 font-mono mb-1">${t.name}</div>
-          <div class="text-[11px] text-txt-muted font-mono leading-relaxed">${t.cols}</div>
-        </div>`).join('')}
-      </div>
+  const body = document.getElementById('schema-body');
+  body.innerHTML = `<div><h3 class="text-sm font-bold text-txt-primary mb-3">Core Tables</h3><div class="space-y-3">
+    ${[{name:'students',cols:'student_id, district_id, school_id, grade, dob, gender, race_ethnicity, el_status, sped_status, free_reduced_lunch, foster_youth, homeless, enrollment_date'},
+      {name:'attendance_records',cols:'record_id, student_id, school_id, date, period, attendance_code, attendance_type, absence_reason, excused_flag, tardy_flag, minutes_absent'},
+      {name:'schools',cols:'school_id, district_id, school_name, school_type, principal_name, address, phone, grades_served'},
+      {name:'assessment_scores',cols:'score_id, student_id, school_id, assessment_name, subject, term, test_date, raw_score, scale_score, percentile, proficiency_level, growth_points, national_norm_rit'},
+      {name:'interventions',cols:'intervention_id, student_id, assigned_staff_id, intervention_type, start_date, end_date, status, notes, last_contact_date'}
+    ].map(t=>`<div class="bg-gray-50 rounded-lg p-3"><div class="text-xs font-bold text-brand-600 font-mono mb-1">${t.name}</div><div class="text-[11px] text-txt-muted font-mono leading-relaxed">${t.cols}</div></div>`).join('')}
+  </div></div>
+  <div><h3 class="text-sm font-bold text-txt-primary mb-3">Filter-to-Field Mapping</h3>
+    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase"><tr><th class="px-3 py-2 text-left">UI Filter</th><th class="px-3 py-2 text-left">Table</th><th class="px-3 py-2 text-left">Field</th></tr></thead><tbody>
+    ${[['School Year','attendance_records','YEAR(date)'],['School','schools','school_name'],['Grade','students','grade'],['Student Group','students','el_status, sped_status, etc.'],['Attendance Type','attendance_records','attendance_type'],['Risk Level','(computed)','SUM(absent)/total_days']].map((r,i)=>`<tr class="${i%2?'bg-gray-50/50':''}"><td class="px-3 py-2">${r[0]}</td><td class="px-3 py-2 font-mono text-brand-600">${r[1]}</td><td class="px-3 py-2 font-mono">${r[2]}</td></tr>`).join('')}
+    </tbody></table></div>
+  </div>
+  <div><h3 class="text-sm font-bold text-txt-primary mb-3">Sample CSV Downloads</h3>
+    <div class="flex flex-wrap gap-2">
+    ${['students','attendance_records','schools','assessment_scores','interventions'].map(t=>
+      `<button class="schema-csv-btn flex items-center gap-1.5 text-xs font-medium text-brand-500 border border-brand-200 rounded-lg px-3 py-2 hover:bg-brand-50 transition-colors" data-table="${t}"><i data-lucide="download" class="w-3.5 h-3.5"></i>${t}.csv</button>`).join('')}
     </div>
-    <div>
-      <h3 class="text-sm font-bold text-txt-primary mb-3">Filter-to-Field Mapping</h3>
-      <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase"><tr><th class="px-3 py-2 text-left">UI Filter</th><th class="px-3 py-2 text-left">Table</th><th class="px-3 py-2 text-left">Field</th></tr></thead><tbody>
-        ${[
-          ['School Year','attendance_records','YEAR(date)'],['School','schools','school_name'],['Grade','students','grade'],
-          ['Student Group','students','el_status, sped_status, etc.'],['Attendance Type','attendance_records','attendance_type'],
-          ['Risk Level','(computed)','SUM(absent)/total_days']
-        ].map((r,i) => `<tr class="${i%2?'bg-gray-50/50':''}"><td class="px-3 py-2">${r[0]}</td><td class="px-3 py-2 font-mono text-brand-600">${r[1]}</td><td class="px-3 py-2 font-mono">${r[2]}</td></tr>`).join('')}
-      </tbody></table></div>
-    </div>
-    <div>
-      <h3 class="text-sm font-bold text-txt-primary mb-3">Sample CSV Downloads</h3>
-      <div class="flex flex-wrap gap-2">
-        ${['students','attendance_records','schools','assessment_scores','interventions'].map(t =>
-          `<button class="schema-csv-btn flex items-center gap-1.5 text-xs font-medium text-brand-500 border border-brand-200 rounded-lg px-3 py-2 hover:bg-brand-50 transition-colors" data-table="${t}"><i data-lucide="download" class="w-3.5 h-3.5"></i>${t}.csv</button>`
-        ).join('')}
-      </div>
-    </div>`;
+  </div>`;
   body.querySelectorAll('.schema-csv-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       downloadCSV(btn.dataset.table+'.csv', ['id','field_1','field_2','field_3'], [['1','sample','data','here'],['2','sample','data','here']]);
     });
   });
   refreshIcons();
-}
-
-// ===================== SIDEBAR =====================
-function toggleSidebar() {
-  state.sidebarCollapsed = !state.sidebarCollapsed;
-  const sidebar = $('#sidebar');
-  if (state.sidebarCollapsed) {
-    sidebar.style.width = '64px';
-    sidebar.style.minWidth = '64px';
-    sidebar.classList.add('sidebar-collapsed');
-  } else {
-    sidebar.style.width = '220px';
-    sidebar.style.minWidth = '220px';
-    sidebar.classList.remove('sidebar-collapsed');
-  }
-}
-
-// ===================== ROLE SWITCHER =====================
-function updateRole(role) {
-  state.role = role;
-  const banner = $('#role-banner');
-  const bannerText = $('#role-banner-text');
-  if (role === 'district-admin') {
-    banner.classList.add('hidden');
-  } else {
-    banner.classList.remove('hidden');
-    const labels = {
-      'school-admin':'Viewing as: School Admin – Data scoped to your assigned school(s)',
-      'teacher':'Viewing as: Teacher – Data scoped to Lincoln Middle School',
-      'community-partner':'Viewing as: Community Partner – Student-level detail is hidden'
-    };
-    bannerText.textContent = labels[role] || '';
-  }
-  renderContent();
 }
 
 // ===================== INIT =====================
@@ -1384,10 +1594,8 @@ function init() {
   updateBreadcrumb();
   renderSchemaModal();
 
-  // Sidebar toggle
   document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
 
-  // Sidebar nav
   document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('#sidebar-nav .nav-item').forEach(i => i.classList.remove('active'));
@@ -1395,10 +1603,8 @@ function init() {
     });
   });
 
-  // Role switcher
   document.getElementById('role-switcher').addEventListener('change', e => updateRole(e.target.value));
 
-  // Schema modal
   document.getElementById('schema-btn').addEventListener('click', () => {
     document.getElementById('schema-modal').classList.remove('hidden');
     refreshIcons();
@@ -1415,7 +1621,6 @@ function init() {
   refreshIcons();
 }
 
-// Guard lucide and init
 if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
   lucide.createIcons();
 }
