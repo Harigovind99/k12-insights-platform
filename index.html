@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>K-12 Insights Platform Prototype</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] },
+      colors: {
+        navy: { DEFAULT: '#1a2744', light: '#243352', dark: '#111b30' },
+        brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+        success: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857' },
+        warning: { 50: '#fffbeb', 100: '#fef3c7', 500: '#f59e0b', 600: '#d97706' },
+        danger: { 50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626' },
+        purple: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed' },
+        surface: { bg: '#f0f4f8', card: '#ffffff', border: '#e2e8f0' },
+        txt: { primary: '#1e293b', muted: '#64748b', light: '#94a3b8' }
+      }
+    }
+  }
+};
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1e293b; overflow: hidden; height: 100vh; }
+.scrollbar-thin::-webkit-scrollbar { width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.tab-scroll::-webkit-scrollbar { height: 3px; }
+.tab-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.tooltip-box { position: fixed; pointer-events: none; z-index: 9999; background: #1e293b; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 240px; }
+.tooltip-box::after { content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); border-left:5px solid transparent; border-right:5px solid transparent; border-top:5px solid #1e293b; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; color: #94a3b8; cursor: pointer; transition: all 0.15s; font-size: 13px; font-weight: 500; white-space: nowrap; position: relative; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; }
+.nav-item.active { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.nav-item.active::before { content:''; position:absolute; left:-12px; top:4px; bottom:4px; width:3px; background:#3b82f6; border-radius:0 3px 3px 0; }
+.sidebar-collapsed .nav-label { display: none; }
+.sidebar-collapsed .sidebar-inner { align-items: center; }
+.sidebar-collapsed .nav-item { justify-content: center; padding: 10px; }
+.sidebar-collapsed .nav-item.active::before { left: -4px; }
+.sidebar-collapsed .logo-text { display: none; }
+.sidebar-collapsed .user-info { display: none; }
+.sidebar-collapsed .sidebar-toggle-label { display: none; }
+.kpi-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; transition: box-shadow 0.2s; }
+.kpi-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+select, input[type="text"], input[type="search"] { font-size: 13px; }
+.risk-pill { padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-block; }
+.risk-low { background: #d1fae5; color: #047857; }
+.risk-atrisk { background: #fef3c7; color: #d97706; }
+.risk-moderate { background: #fed7aa; color: #c2410c; }
+.risk-chronic { background: #fee2e2; color: #dc2626; }
+.heatmap-cell { transition: opacity 0.15s; }
+.heatmap-cell:hover { opacity: 0.8; stroke: #1e293b; stroke-width: 2; }
+.gantt-bar { rx: 4; ry: 4; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease-out; }
+.chart-bar:hover { opacity: 0.85; }
+.filter-select { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 28px 6px 10px; font-size: 13px; color: #1e293b; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; cursor: pointer; min-width: 120px; }
+.filter-select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+</style>
+</head>
+<body data-id="0">
+<app-icon data-id="1" hidden data-icon="bar-chart-3" data-palette="Blue"></app-icon>
+
+<div data-id="2" id="app-shell" class="flex h-screen w-screen overflow-hidden">
+  <!-- LEFT SIDEBAR -->
+  <aside data-id="3" id="sidebar" class="flex flex-col h-full bg-navy text-white transition-all duration-200" style="width:220px; min-width:220px;">
+    <div data-id="4" class="sidebar-inner flex flex-col h-full">
+      <!-- Logo -->
+      <div data-id="5" class="flex items-center gap-2 px-4 py-4 border-b border-white/10">
+        <div data-id="6" class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center flex-shrink-0">
+          <i data-id="7" data-lucide="bar-chart-3" class="w-4 h-4 text-white"></i>
+        </div>
+        <span data-id="8" class="logo-text text-sm font-bold tracking-tight">EduInsights</span>
+      </div>
+      <!-- Nav -->
+      <nav data-id="9" class="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 space-y-1" id="sidebar-nav">
+        <div data-id="10" class="nav-item" data-nav="home"><i data-id="11" data-lucide="home" class="w-4 h-4 flex-shrink-0"></i><span data-id="12" class="nav-label">Home</span></div>
+        <div data-id="13" class="nav-item" data-nav="assessments-nav"><i data-id="14" data-lucide="file-check" class="w-4 h-4 flex-shrink-0"></i><span data-id="15" class="nav-label">Assessments</span></div>
+        <div data-id="16" class="nav-item" data-nav="people"><i data-id="17" data-lucide="users" class="w-4 h-4 flex-shrink-0"></i><span data-id="18" class="nav-label">People</span></div>
+        <div data-id="19" class="nav-item" data-nav="students"><i data-id="20" data-lucide="graduation-cap" class="w-4 h-4 flex-shrink-0"></i><span data-id="21" class="nav-label">Students</span></div>
+        <div data-id="22" class="nav-item" data-nav="focus"><i data-id="23" data-lucide="crosshair" class="w-4 h-4 flex-shrink-0"></i><span data-id="24" class="nav-label">Focus</span></div>
+        <div data-id="25" class="nav-item" data-nav="class"><i data-id="26" data-lucide="school" class="w-4 h-4 flex-shrink-0"></i><span data-id="27" class="nav-label">Class</span></div>
+        <div data-id="28" class="nav-item" data-nav="curriculum"><i data-id="29" data-lucide="book-open" class="w-4 h-4 flex-shrink-0"></i><span data-id="30" class="nav-label">Curriculum</span></div>
+        <div data-id="31" class="nav-item" data-nav="learn"><i data-id="32" data-lucide="lightbulb" class="w-4 h-4 flex-shrink-0"></i><span data-id="33" class="nav-label">Learn</span></div>
+        <div data-id="34" class="nav-item" data-nav="forms"><i data-id="35" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i><span data-id="36" class="nav-label">Forms</span></div>
+        <div data-id="37" class="nav-item" data-nav="plans"><i data-id="38" data-lucide="clipboard-list" class="w-4 h-4 flex-shrink-0"></i><span data-id="39" class="nav-label">Plans</span></div>
+        <div data-id="40" class="nav-item" data-nav="behavior"><i data-id="41" data-lucide="shield" class="w-4 h-4 flex-shrink-0"></i><span data-id="42" class="nav-label">Behavior</span></div>
+        <div data-id="43" class="nav-item" data-nav="partners"><i data-id="44" data-lucide="handshake" class="w-4 h-4 flex-shrink-0"></i><span data-id="45" class="nav-label">Partners</span></div>
+        <div data-id="46" class="nav-item" data-nav="payments"><i data-id="47" data-lucide="credit-card" class="w-4 h-4 flex-shrink-0"></i><span data-id="48" class="nav-label">Payments</span></div>
+        <div data-id="49" class="nav-item active" data-nav="insights"><i data-id="50" data-lucide="line-chart" class="w-4 h-4 flex-shrink-0"></i><span data-id="51" class="nav-label">Insights</span></div>
+        <div data-id="52" class="nav-item" data-nav="settings"><i data-id="53" data-lucide="settings" class="w-4 h-4 flex-shrink-0"></i><span data-id="54" class="nav-label">Settings</span></div>
+        <div data-id="55" class="nav-item" data-nav="diagnostics"><i data-id="56" data-lucide="activity" class="w-4 h-4 flex-shrink-0"></i><span data-id="57" class="nav-label">Diagnostics</span></div>
+      </nav>
+      <!-- Sidebar Toggle -->
+      <div data-id="58" class="px-3 py-2 border-t border-white/10">
+        <div data-id="59" class="nav-item" id="sidebar-toggle"><i data-id="60" data-lucide="panel-left-close" class="w-4 h-4 flex-shrink-0"></i><span data-id="61" class="sidebar-toggle-label nav-label text-xs">Collapse</span></div>
+      </div>
+      <!-- User -->
+      <div data-id="62" class="px-4 py-3 border-t border-white/10 flex items-center gap-3">
+        <div data-id="63" class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-xs font-bold flex-shrink-0">HA</div>
+        <div data-id="64" class="user-info min-w-0">
+          <div data-id="65" class="text-xs font-semibold truncate">Harigovind</div>
+          <div data-id="66" class="text-[10px] text-txt-light">District Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div data-id="67" class="flex-1 flex flex-col min-w-0 h-full">
+    <!-- TOP BAR -->
+    <header data-id="68" class="bg-white border-b border-surface-border flex flex-col flex-shrink-0" style="z-index:40;">
+      <div data-id="69" class="flex items-center justify-between px-4 h-14">
+        <!-- Breadcrumb -->
+        <div data-id="70" class="flex items-center gap-1 text-xs text-txt-muted">
+          <span data-id="71" class="text-brand-500 font-medium">Insights</span>
+          <i data-id="72" data-lucide="chevron-right" class="w-3 h-3"></i>
+          <span data-id="73" id="breadcrumb-domain">Attendance</span>
+          <i data-id="74" data-lucide="chevron-right" class="w-3 h-3"></i>
+          <span data-id="75" id="breadcrumb-sub" class="text-txt-primary font-medium">Overview</span>
+        </div>
+        <!-- Right actions -->
+        <div data-id="76" class="flex items-center gap-3">
+          <!-- Role Switcher -->
+          <select data-id="77" id="role-switcher" class="filter-select text-xs" style="min-width:140px;">
+            <option data-id="78" value="district-admin">District Admin</option>
+            <option data-id="79" value="school-admin">School Admin</option>
+            <option data-id="80" value="teacher">Teacher</option>
+            <option data-id="81" value="community-partner">Community Partner</option>
+          </select>
+          <button data-id="82" id="schema-btn" class="text-xs text-brand-500 font-medium hover:underline px-2 py-1 rounded">Schema & Docs</button>
+          <button data-id="83" class="relative p-2 rounded-lg hover:bg-gray-100"><i data-id="84" data-lucide="bell" class="w-4 h-4 text-txt-muted"></i><span data-id="85" class="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span></button>
+          <button data-id="86" class="p-2 rounded-lg hover:bg-gray-100"><i data-id="87" data-lucide="help-circle" class="w-4 h-4 text-txt-muted"></i></button>
+          <div data-id="88" class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">HA</div>
+        </div>
+      </div>
+      <!-- Insight Domain Tabs -->
+      <div data-id="89" class="flex overflow-x-auto tab-scroll border-t border-surface-border px-2" id="domain-tabs">
+        <!-- Tabs rendered by JS -->
+      </div>
+    </header>
+
+    <!-- Role Banner -->
+    <div data-id="90" id="role-banner" class="hidden bg-brand-50 border-b border-brand-200 px-4 py-2 text-xs text-brand-700 font-medium flex items-center gap-2">
+      <i data-id="91" data-lucide="eye" class="w-3 h-3"></i>
+      <span data-id="92" id="role-banner-text"></span>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <main data-id="93" id="main-content" class="flex-1 overflow-y-auto scrollbar-thin">
+      <!-- Dynamic content rendered by JS -->
+    </main>
+  </div>
+</div>
+
+<!-- Global Tooltip -->
+<div data-id="94" id="global-tooltip" class="tooltip-box" style="display:none;"></div>
+
+<!-- Schema Modal -->
+<div data-id="95" id="schema-modal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center" style="z-index:100;">
+  <div data-id="96" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col mx-4">
+    <div data-id="97" class="flex items-center justify-between px-6 py-4 border-b border-surface-border">
+      <h2 data-id="98" class="text-lg font-bold text-txt-primary">Data Model & Schema</h2>
+      <button data-id="99" id="schema-close" class="p-2 rounded-lg hover:bg-gray-100"><i data-id="100" data-lucide="x" class="w-5 h-5 text-txt-muted"></i></button>
+    </div>
+    <div data-id="101" class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin" id="schema-body">
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+const SCHOOLS = ['Jefferson Elementary','Lincoln Middle','Washington High','Roosevelt K-8','Adams Elementary'];
+const GRADES = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
+const STUDENT_GROUPS = ['All','English Learners','Special Education','Socioeconomically Disadvantaged','Foster Youth','Homeless','Gifted','504'];
+
+const DOMAIN_TABS = [
+  'Strategic Plan','Accountability','Climate & Culture','School Improvement','Early Warning','MTSS/RTI','Whole Child','Well-being','Assessments','Academics','Attendance','Behavior & Discipline','Graduation Readiness','College Career Life','Portrait of a Graduate','Community Engagement','Family Engagement','Safety','Enrollment','IDEA','EdTech Impact','Finance','Staff','Custom'
+];
+const IMPLEMENTED_TABS = ['Attendance','Assessments','Early Warning','Academics'];
+
+const ATTENDANCE_BY_SCHOOL = [
+  { school:'Jefferson Elementary', present:96.1, excused:1.8, unexcused:1.4, tardy:0.7 },
+  { school:'Lincoln Middle', present:93.4, excused:2.1, unexcused:2.8, tardy:1.7 },
+  { school:'Washington High', present:91.2, excused:2.4, unexcused:4.1, tardy:2.3 },
+  { school:'Roosevelt K-8', present:94.8, excused:2.0, unexcused:1.9, tardy:1.3 },
+  { school:'Adams Elementary', present:95.6, excused:1.6, unexcused:1.5, tardy:1.3 }
+];
+
+const ABSENCE_BY_TYPE = [
+  { label:'Excused', pct:42, count:5396, color:'#3b82f6' },
+  { label:'Unexcused', pct:35, count:4496, color:'#ef4444' },
+  { label:'Tardy', pct:14, count:1799, color:'#8b5cf6' },
+  { label:'Early Dismissal', pct:9, count:1156, color:'#f59e0b' }
+];
+
+const ABSENCE_BY_DOW = [
+  { day:'Mon', count:2840 }, { day:'Tue', count:1920 }, { day:'Wed', count:1760 }, { day:'Thu', count:1890 }, { day:'Fri', count:3210 }
+];
+
+const MONTHLY_TREND = [
+  { m:'Aug', cur:95.1, prev:94.2 }, { m:'Sep', cur:94.8, prev:93.9 }, { m:'Oct', cur:94.2, prev:93.5 },
+  { m:'Nov', cur:93.8, prev:93.1 }, { m:'Dec', cur:92.1, prev:91.8 }, { m:'Jan', cur:94.5, prev:93.8 },
+  { m:'Feb', cur:94.9, prev:94.1 }, { m:'Mar', cur:95.3, prev:94.6 }, { m:'Apr', cur:95.7, prev:95.0 },
+  { m:'May', cur:94.1, prev:93.7 }, { m:'Jun', cur:93.2, prev:92.8 }
+];
+
+const STUDENTS_DATA = [
+  { id:'STU-10421', name:'Aaliyah Johnson', school:'Jefferson Elementary', grade:'3', present:168, excAbsent:4, unexAbsent:2, tardies:3, rate:96.6, risk:'Low' },
+  { id:'STU-10533', name:'Marcus Williams', school:'Lincoln Middle', grade:'7', present:152, excAbsent:8, unexAbsent:12, tardies:7, rate:87.4, risk:'At-Risk' },
+  { id:'STU-10678', name:'Sofia Martinez', school:'Washington High', grade:'10', present:140, excAbsent:6, unexAbsent:22, tardies:12, rate:80.5, risk:'Chronic' },
+  { id:'STU-10712', name:'James Chen', school:'Adams Elementary', grade:'2', present:172, excAbsent:2, unexAbsent:1, tardies:1, rate:98.9, risk:'Low' },
+  { id:'STU-10845', name:'Destiny Brown', school:'Roosevelt K-8', grade:'5', present:158, excAbsent:7, unexAbsent:9, tardies:5, rate:90.8, risk:'Moderate' },
+  { id:'STU-10901', name:'Ethan Davis', school:'Lincoln Middle', grade:'6', present:164, excAbsent:5, unexAbsent:4, tardies:4, rate:94.3, risk:'Low' },
+  { id:'STU-11023', name:'Isabella Thompson', school:'Washington High', grade:'11', present:148, excAbsent:10, unexAbsent:14, tardies:8, rate:85.1, risk:'At-Risk' },
+  { id:'STU-11134', name:'Noah Garcia', school:'Jefferson Elementary', grade:'K', present:170, excAbsent:3, unexAbsent:2, tardies:2, rate:97.7, risk:'Low' },
+  { id:'STU-11256', name:'Amara Washington', school:'Roosevelt K-8', grade:'8', present:144, excAbsent:9, unexAbsent:18, tardies:10, rate:82.8, risk:'Chronic' },
+  { id:'STU-11378', name:'Liam Rodriguez', school:'Adams Elementary', grade:'4', present:162, excAbsent:6, unexAbsent:5, tardies:4, rate:93.1, risk:'At-Risk' }
+];
+
+const RISK_MATRIX = [
+  [2840,187,42,11],
+  [203,412,98,28],
+  [67,134,289,88],
+  [18,41,112,398]
+];
+const RISK_LABELS = ['Low','At-Risk','Moderate','Chronic'];
+
+const QUARTERLY_CHRONIC = [
+  { school:'Jefferson Elementary', q:[3.2,3.8,4.1,3.9], color:'#3b82f6' },
+  { school:'Lincoln Middle', q:[7.4,8.1,8.8,8.2], color:'#10b981' },
+  { school:'Washington High', q:[11.2,12.4,13.1,12.8], color:'#ef4444' },
+  { school:'Roosevelt K-8', q:[5.8,6.2,6.9,6.4], color:'#8b5cf6' },
+  { school:'Adams Elementary', q:[4.1,4.5,4.8,4.3], color:'#f59e0b' }
+];
+
+const RISK_BY_GRADE = [
+  { g:'K', atRisk:42, chronic:12 },{ g:'1', atRisk:48, chronic:15 },{ g:'2', atRisk:51, chronic:18 },
+  { g:'3', atRisk:55, chronic:21 },{ g:'4', atRisk:62, chronic:28 },{ g:'5', atRisk:68, chronic:32 },
+  { g:'6', atRisk:82, chronic:41 },{ g:'7', atRisk:91, chronic:48 },{ g:'8', atRisk:87, chronic:45 },
+  { g:'9', atRisk:104, chronic:56 },{ g:'10', atRisk:98, chronic:52 },{ g:'11', atRisk:88, chronic:44 },
+  { g:'12', atRisk:76, chronic:38 }
+];
+
+const CHRONIC_BY_GROUP = [
+  { group:'All Students', rate:8.7 },{ group:'English Learners', rate:14.2 },{ group:'Special Education', rate:18.4 },
+  { group:'Socioec. Disadvantaged', rate:12.8 },{ group:'Foster Youth', rate:31.4 },{ group:'Homeless', rate:28.9 },
+  { group:'Hispanic/Latino', rate:11.2 },{ group:'African American', rate:13.7 },{ group:'White', rate:5.4 },{ group:'Asian', rate:4.1 }
+];
+
+const CHRONIC_HEATMAP = [
+  { school:'Jefferson Elem.', data:[2.8,3.1,3.4,3.9,4.2,4.5,4.1,3.8,3.2,3.0,2.9] },
+  { school:'Lincoln Middle', data:[6.2,6.8,7.4,8.1,9.2,8.8,8.4,7.9,7.2,6.8,6.4] },
+  { school:'Washington High', data:[9.8,10.4,11.2,12.1,14.2,13.1,12.4,11.8,10.9,10.2,9.6] },
+  { school:'Roosevelt K-8', data:[4.8,5.2,5.8,6.4,7.1,6.9,6.2,5.8,5.2,4.8,4.5] },
+  { school:'Adams Elem.', data:[3.2,3.5,3.8,4.2,4.8,4.5,4.2,3.9,3.5,3.2,3.0] }
+];
+const MONTHS_SHORT = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+
+const INTERVENTION_STUDENTS = [
+  { name:'Sofia Martinez', school:'Washington High', grade:'10', absent:28, rate:80.5, risk:'Chronic', counselor:'Dr. Rivera', status:'Active', lastContact:'Jun 08, 2025', notes:'Weekly check-ins scheduled' },
+  { name:'Amara Washington', school:'Roosevelt K-8', grade:'8', absent:27, rate:82.8, risk:'Chronic', counselor:'Ms. Chen', status:'Active', lastContact:'Jun 05, 2025', notes:'Parent meeting completed' },
+  { name:'Marcus Williams', school:'Lincoln Middle', grade:'7', absent:20, rate:87.4, risk:'At-Risk', counselor:'Mr. Johnson', status:'Active', lastContact:'Jun 09, 2025', notes:'Mentoring program enrolled' },
+  { name:'Isabella Thompson', school:'Washington High', grade:'11', absent:24, rate:85.1, risk:'At-Risk', counselor:'Dr. Rivera', status:'Pending', lastContact:'Jun 02, 2025', notes:'Awaiting parent consent' },
+  { name:'Destiny Brown', school:'Roosevelt K-8', grade:'5', absent:16, rate:90.8, risk:'Moderate', counselor:'Ms. Park', status:'Active', lastContact:'Jun 10, 2025', notes:'Attendance contract signed' },
+  { name:'Liam Rodriguez', school:'Adams Elementary', grade:'4', absent:11, rate:93.1, risk:'At-Risk', counselor:'Ms. Park', status:'None', lastContact:'—', notes:'To be assigned' },
+  { name:'Tyler Jackson', school:'Lincoln Middle', grade:'8', absent:31, rate:78.2, risk:'Chronic', counselor:'Mr. Johnson', status:'Active', lastContact:'Jun 07, 2025', notes:'Transportation assistance' },
+  { name:'Priya Patel', school:'Washington High', grade:'9', absent:19, rate:89.1, risk:'Moderate', counselor:'Dr. Rivera', status:'Pending', lastContact:'May 28, 2025', notes:'Health accommodations review' }
+];
+
+// ===================== STATE =====================
+let state = {
+  sidebarCollapsed: false,
+  activeDomain: 'Attendance',
+  activeSubTab: 'overview',
+  role: 'district-admin',
+  sortCol: null,
+  sortDir: 'asc',
+  searchQuery: '',
+  studentPage: 1
+};
+
+// ===================== HELPERS =====================
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const tooltip = $('#global-tooltip');
+
+function showTooltip(e, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  const r = tooltip.getBoundingClientRect();
+  let x = e.clientX - r.width/2;
+  let y = e.clientY - r.height - 14;
+  if (x < 4) x = 4;
+  if (x + r.width > window.innerWidth - 4) x = window.innerWidth - r.width - 4;
+  if (y < 4) y = e.clientY + 18;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+function num(n) { return n.toLocaleString(); }
+function pct(n) { return n.toFixed(1) + '%'; }
+
+function riskClass(r) {
+  const m = { 'Low':'risk-low','At-Risk':'risk-atrisk','Moderate':'risk-moderate','Chronic':'risk-chronic' };
+  return m[r] || 'risk-low';
+}
+
+function downloadCSV(filename, headers, rows) {
+  let csv = headers.join(',') + '\n';
+  rows.forEach(r => { csv += r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',') + '\n'; });
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===================== SVG CHART HELPERS =====================
+function svgEl(tag, attrs={}, text='') {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  if (text) el.textContent = text;
+  return el;
+}
+
+function createStackedHBar(container, data, w=540, h=220) {
+  const margin = { t:10, r:20, b:40, l:140 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const barH = Math.min(28, ch / data.length - 6);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+
+  data.forEach((d, i) => {
+    const y = margin.t + i * (ch / data.length) + (ch / data.length - barH) / 2;
+    // Label
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+barH/2+4, fill:'#64748b', 'font-size':'11', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.school.length > 18 ? d.school.substring(0,16)+'…' : d.school));
+    // Stacked bars
+    const segs = [
+      { val:d.present, color:'#3b82f6', label:'Present' },
+      { val:d.excused, color:'#f59e0b', label:'Excused' },
+      { val:d.unexcused, color:'#ef4444', label:'Unexcused' },
+      { val:d.tardy, color:'#8b5cf6', label:'Tardy' }
+    ];
+    let cx = margin.l;
+    segs.forEach(s => {
+      const bw = (s.val / 100) * cw;
+      const rect = svgEl('rect', { x:cx, y:y, width:Math.max(0,bw), height:barH, fill:s.color, class:'chart-bar', 'data-tip': `${d.school}\n${s.label}: ${pct(s.val)}` });
+      svg.appendChild(rect);
+      cx += bw;
+    });
+  });
+
+  // X axis
+  for (let i = 0; i <= 4; i++) {
+    const x = margin.l + (i/4)*cw;
+    svg.appendChild(svgEl('line', { x1:x, y1:margin.t, x2:x, y2:h-margin.b, stroke:'#e2e8f0', 'stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:x, y:h-margin.b+16, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, (i*25)+'%'));
+  }
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-4 mt-3 justify-center';
+  [{ l:'Present', c:'#3b82f6' },{ l:'Excused', c:'#f59e0b' },{ l:'Unexcused', c:'#ef4444' },{ l:'Tardy', c:'#8b5cf6' }].forEach(s => {
+    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${s.c}"></div>${s.l}</div>`;
+  });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function createDonut(container, data, centerText, w=280, h=280) {
+  const cx = w/2, cy = h/2, r = 90, inner = 55;
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full max-w-[280px] mx-auto' });
+  let startAngle = -90;
+  data.forEach(d => {
+    const angle = (d.pct / 100) * 360;
+    const endAngle = startAngle + angle;
+    const largeArc = angle > 180 ? 1 : 0;
+    const x1 = cx + r * Math.cos(startAngle * Math.PI / 180);
+    const y1 = cy + r * Math.sin(startAngle * Math.PI / 180);
+    const x2 = cx + r * Math.cos(endAngle * Math.PI / 180);
+    const y2 = cy + r * Math.sin(endAngle * Math.PI / 180);
+    const ix1 = cx + inner * Math.cos(endAngle * Math.PI / 180);
+    const iy1 = cy + inner * Math.sin(endAngle * Math.PI / 180);
+    const ix2 = cx + inner * Math.cos(startAngle * Math.PI / 180);
+    const iy2 = cy + inner * Math.sin(startAngle * Math.PI / 180);
+    const path = `M${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} L${ix1},${iy1} A${inner},${inner} 0 ${largeArc},0 ${ix2},${iy2} Z`;
+    const p = svgEl('path', { d:path, fill:d.color, class:'chart-bar', 'data-tip':`${d.label}\n${num(d.count)} (${d.pct}%)` });
+    svg.appendChild(p);
+    startAngle = endAngle;
+  });
+  // Center text
+  svg.appendChild(svgEl('text', { x:cx, y:cy-6, fill:'#1e293b', 'font-size':'22', 'font-weight':'700', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, centerText));
+  svg.appendChild(svgEl('text', { x:cx, y:cy+14, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, 'Total Absences'));
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-3 mt-3 justify-center';
+  data.forEach(d => {
+    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm" style="background:${d.color}"></div>${d.label} (${d.pct}%)</div>`;
+  });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function createVerticalBar(container, data, w=520, h=260, highlightFri=true) {
+  const margin = { t:10, r:20, b:40, l:50 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const maxVal = Math.max(...data.map(d=>d.count)) * 1.15;
+  const barW = Math.min(48, cw / data.length - 12);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+  const total = data.reduce((s,d)=>s+d.count,0);
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = margin.t + (i/4)*ch;
+    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, num(Math.round(maxVal*(1-i/4)))));
+  }
+
+  data.forEach((d, i) => {
+    const x = margin.l + i*(cw/data.length) + (cw/data.length - barW)/2;
+    const barH = (d.count / maxVal) * ch;
+    const y = margin.t + ch - barH;
+    const color = (highlightFri && d.day === 'Fri') ? '#ef4444' : '#3b82f6';
+    svg.appendChild(svgEl('rect', { x:x, y:y, width:barW, height:barH, fill:color, rx:'2', class:'chart-bar', 'data-tip':`${d.day}: ${num(d.count)} absences\n${pct(d.count/total*100)} of weekly total` }));
+    svg.appendChild(svgEl('text', { x:x+barW/2, y:h-margin.b+16, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, d.day));
+  });
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const note = document.createElement('div');
+  note.className = 'text-xs text-danger-500 font-medium mt-2 text-center';
+  note.textContent = 'Fridays account for 26% of all absences';
+  container.appendChild(note);
+  attachChartTooltips(container);
+}
+
+function createLineChart(container, data, w=540, h=280) {
+  const margin = { t:20, r:30, b:40, l:45 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const yMin = 88, yMax = 98;
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+
+  // Grid
+  for (let i = 0; i <= 5; i++) {
+    const y = margin.t + (i/5)*ch;
+    const val = yMax - (i/5)*(yMax-yMin);
+    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, pct(val)));
+  }
+
+  // Target line at 96%
+  const targetY = margin.t + ((yMax-96)/(yMax-yMin))*ch;
+  svg.appendChild(svgEl('line', { x1:margin.l, y1:targetY, x2:w-margin.r, y2:targetY, stroke:'#10b981', 'stroke-width':'1', 'stroke-dasharray':'6,4' }));
+  svg.appendChild(svgEl('text', { x:w-margin.r+4, y:targetY+3, fill:'#10b981', 'font-size':'9', 'font-family':'Inter,sans-serif' }, 'Goal'));
+
+  const getX = i => margin.l + (i/(data.length-1))*cw;
+  const getY = v => margin.t + ((yMax-v)/(yMax-yMin))*ch;
+
+  // Area fill
+  let areaPath = `M${getX(0)},${getY(data[0].cur)}`;
+  data.forEach((d,i) => { if (i>0) areaPath += ` L${getX(i)},${getY(d.cur)}`; });
+  areaPath += ` L${getX(data.length-1)},${margin.t+ch} L${getX(0)},${margin.t+ch} Z`;
+  svg.appendChild(svgEl('path', { d:areaPath, fill:'#3b82f6', opacity:'0.08' }));
+
+  // Prior year line
+  let prevPath = data.map((d,i) => `${i===0?'M':'L'}${getX(i)},${getY(d.prev)}`).join(' ');
+  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.prev)}`).join(' '), fill:'none', stroke:'#94a3b8', 'stroke-width':'2', 'stroke-dasharray':'6,4' }));
+
+  // Current year line
+  svg.appendChild(svgEl('polyline', { points:data.map((d,i)=>`${getX(i)},${getY(d.cur)}`).join(' '), fill:'none', stroke:'#3b82f6', 'stroke-width':'2.5' }));
+
+  // Points & labels
+  data.forEach((d,i) => {
+    const x = getX(i);
+    // Current
+    svg.appendChild(svgEl('circle', { cx:x, cy:getY(d.cur), r:'4', fill:'#3b82f6', stroke:'#fff', 'stroke-width':'2', class:'chart-bar', 'data-tip':`${d.m}\nCurrent: ${pct(d.cur)}\nPrior: ${pct(d.prev)}\nΔ ${(d.cur-d.prev>0?'+':'')}${pct(d.cur-d.prev)}` }));
+    // Prev
+    svg.appendChild(svgEl('circle', { cx:x, cy:getY(d.prev), r:'3', fill:'#94a3b8', stroke:'#fff', 'stroke-width':'1.5' }));
+    // X label
+    svg.appendChild(svgEl('text', { x:x, y:h-margin.b+16, fill:'#64748b', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, d.m));
+  });
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex gap-5 mt-2 justify-center';
+  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-brand-500 rounded"></div>2024-25</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 bg-txt-light rounded" style="border-top:1px dashed #94a3b8;height:0"></div>2023-24</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-4 h-0.5 rounded" style="border-top:1px dashed #10b981;height:0"></div>District Goal (96%)</div>';
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function createHeatmap(container, data, cols, w=680, h=200) {
+  const margin = { t:30, r:20, b:10, l:110 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const cellW = cw / cols.length;
+  const cellH = ch / data.length;
+  const allVals = data.flatMap(d=>d.data);
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+
+  // Col headers
+  cols.forEach((c,i) => {
+    svg.appendChild(svgEl('text', { x:margin.l+i*cellW+cellW/2, y:margin.t-8, fill:'#64748b', 'font-size':'10', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, c));
+  });
+
+  data.forEach((row,ri) => {
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:margin.t+ri*cellH+cellH/2+4, fill:'#64748b', 'font-size':'11', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, row.school));
+    row.data.forEach((val,ci) => {
+      const intensity = (val - minV) / (maxV - minV);
+      const r = Math.round(255 - intensity * (255-220));
+      const g = Math.round(255 - intensity * (255-50));
+      const b = Math.round(255 - intensity * (255-50));
+      const rect = svgEl('rect', {
+        x:margin.l+ci*cellW+1, y:margin.t+ri*cellH+1,
+        width:cellW-2, height:cellH-2,
+        fill:`rgb(${r},${g},${b})`, rx:'3', class:'heatmap-cell',
+        'data-tip':`${row.school}\n${cols[ci]}: ${pct(val)}`
+      });
+      svg.appendChild(rect);
+      svg.appendChild(svgEl('text', {
+        x:margin.l+ci*cellW+cellW/2, y:margin.t+ri*cellH+cellH/2+4,
+        fill: intensity > 0.5 ? '#fff' : '#1e293b', 'font-size':'10', 'font-weight':'600',
+        'text-anchor':'middle', 'font-family':'Inter,sans-serif'
+      }, pct(val)));
+    });
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  attachChartTooltips(container);
+}
+
+function createHorizontalBar(container, data, w=500, h=320, threshold=10) {
+  const margin = { t:10, r:40, b:20, l:160 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const maxVal = Math.max(...data.map(d=>d.rate)) * 1.15;
+  const barH = Math.min(22, ch / data.length - 4);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+
+  // Threshold line
+  const thX = margin.l + (threshold/maxVal)*cw;
+  svg.appendChild(svgEl('line', { x1:thX, y1:margin.t, x2:thX, y2:h-margin.b, stroke:'#ef4444', 'stroke-width':'1', 'stroke-dasharray':'4,3' }));
+  svg.appendChild(svgEl('text', { x:thX, y:margin.t-4, fill:'#ef4444', 'font-size':'9', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, threshold+'%'));
+
+  data.forEach((d,i) => {
+    const y = margin.t + i*(ch/data.length) + (ch/data.length - barH)/2;
+    const bw = (d.rate/maxVal)*cw;
+    const color = d.rate >= threshold ? '#ef4444' : d.rate >= threshold*0.7 ? '#f59e0b' : '#3b82f6';
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+barH/2+4, fill:'#64748b', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.group.length > 22 ? d.group.substring(0,20)+'…' : d.group));
+    svg.appendChild(svgEl('rect', { x:margin.l, y:y, width:Math.max(0,bw), height:barH, fill:color, rx:'2', class:'chart-bar', 'data-tip':`${d.group}: ${pct(d.rate)}` }));
+    svg.appendChild(svgEl('text', { x:margin.l+bw+6, y:y+barH/2+4, fill:'#1e293b', 'font-size':'10', 'font-weight':'600', 'font-family':'Inter,sans-serif' }, pct(d.rate)));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  attachChartTooltips(container);
+}
+
+function createQuarterlyLineChart(container, data, w=540, h=280) {
+  const margin = { t:20, r:30, b:40, l:45 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const yMin = 0, yMax = 20;
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+  const quarters = ['Q1','Q2','Q3','Q4'];
+
+  for (let i = 0; i <= 4; i++) {
+    const y = margin.t + (i/4)*ch;
+    svg.appendChild(svgEl('line', { x1:margin.l, y1:y, x2:w-margin.r, y2:y, stroke:'#e2e8f0', 'stroke-width':'1' }));
+    svg.appendChild(svgEl('text', { x:margin.l-8, y:y+4, fill:'#94a3b8', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, pct(yMax-(i/4)*yMax)));
+  }
+  quarters.forEach((q,i) => {
+    svg.appendChild(svgEl('text', { x:margin.l+(i/(quarters.length-1))*cw, y:h-margin.b+16, fill:'#64748b', 'font-size':'11', 'text-anchor':'middle', 'font-family':'Inter,sans-serif' }, q));
+  });
+
+  // Target
+  const tY = margin.t + ((yMax-10)/(yMax-yMin))*ch;
+  svg.appendChild(svgEl('line', { x1:margin.l, y1:tY, x2:w-margin.r, y2:tY, stroke:'#ef4444', 'stroke-width':'1', 'stroke-dasharray':'5,4' }));
+  svg.appendChild(svgEl('text', { x:w-margin.r+2, y:tY+3, fill:'#ef4444', 'font-size':'9', 'font-family':'Inter,sans-serif' }, '10%'));
+
+  const getX = i => margin.l + (i/3)*cw;
+  const getY = v => margin.t + ((yMax-v)/(yMax-yMin))*ch;
+
+  data.forEach(school => {
+    const pts = school.q.map((v,i) => `${getX(i)},${getY(v)}`).join(' ');
+    svg.appendChild(svgEl('polyline', { points:pts, fill:'none', stroke:school.color, 'stroke-width':'2' }));
+    school.q.forEach((v,i) => {
+      svg.appendChild(svgEl('circle', { cx:getX(i), cy:getY(v), r:'4', fill:school.color, stroke:'#fff', 'stroke-width':'2', class:'chart-bar', 'data-tip':`${school.school}\n${quarters[i]}: ${pct(v)}` }));
+    });
+  });
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex flex-wrap gap-3 mt-2 justify-center';
+  data.forEach(s => {
+    legend.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full" style="background:${s.color}"></div>${s.school}</div>`;
+  });
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function createGroupedHBar(container, data, w=540, h=420) {
+  const margin = { t:10, r:60, b:20, l:40 };
+  const cw = w - margin.l - margin.r;
+  const ch = h - margin.t - margin.b;
+  const maxVal = Math.max(...data.flatMap(d=>[d.atRisk,d.chronic])) * 1.2;
+  const groupH = ch / data.length;
+  const barH = Math.min(10, groupH/2 - 2);
+  const svg = svgEl('svg', { width:'100%', height:h, viewBox:`0 0 ${w} ${h}`, class:'w-full' });
+
+  data.forEach((d,i) => {
+    const y = margin.t + i*groupH;
+    svg.appendChild(svgEl('text', { x:margin.l-6, y:y+groupH/2+4, fill:'#64748b', 'font-size':'10', 'text-anchor':'end', 'font-family':'Inter,sans-serif' }, d.g));
+    // At Risk bar
+    const arW = (d.atRisk/maxVal)*cw;
+    svg.appendChild(svgEl('rect', { x:margin.l, y:y+groupH/2-barH-1, width:arW, height:barH, fill:'#3b82f6', rx:'1', class:'chart-bar', 'data-tip':`Grade ${d.g}\nAt-Risk: ${d.atRisk} students` }));
+    svg.appendChild(svgEl('text', { x:margin.l+arW+4, y:y+groupH/2-barH/2+3, fill:'#64748b', 'font-size':'9', 'font-family':'Inter,sans-serif' }, String(d.atRisk)));
+    // Chronic bar
+    const crW = (d.chronic/maxVal)*cw;
+    svg.appendChild(svgEl('rect', { x:margin.l, y:y+groupH/2+1, width:crW, height:barH, fill:'#ef4444', rx:'1', class:'chart-bar', 'data-tip':`Grade ${d.g}\nChronic: ${d.chronic} students` }));
+    svg.appendChild(svgEl('text', { x:margin.l+crW+4, y:y+groupH/2+barH/2+5, fill:'#64748b', 'font-size':'9', 'font-family':'Inter,sans-serif' }, String(d.chronic)));
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+  const legend = document.createElement('div');
+  legend.className = 'flex gap-4 mt-2 justify-center';
+  legend.innerHTML = '<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-brand-500"></div>At-Risk</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-sm bg-danger-500"></div>Chronic</div>';
+  container.appendChild(legend);
+  attachChartTooltips(container);
+}
+
+function attachChartTooltips(container) {
+  container.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mouseenter', e => showTooltip(e, el.getAttribute('data-tip').replace(/\n/g,'<br>')));
+    el.addEventListener('mousemove', e => showTooltip(e, el.getAttribute('data-tip').replace(/\n/g,'<br>')));
+    el.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+// ===================== RENDER FUNCTIONS =====================
+function renderDomainTabs() {
+  const container = $('#domain-tabs');
+  container.innerHTML = '';
+  DOMAIN_TABS.forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = `flex-shrink-0 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${tab === state.activeDomain ? 'border-brand-500 text-brand-500' : 'border-transparent text-txt-muted hover:text-txt-primary hover:border-gray-300'}`;
+    btn.textContent = tab;
+    btn.addEventListener('click', () => {
+      state.activeDomain = tab;
+      state.activeSubTab = tab === 'Attendance' ? 'overview' : 'main';
+      renderDomainTabs();
+      renderContent();
+      updateBreadcrumb();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function updateBreadcrumb() {
+  $('#breadcrumb-domain').textContent = state.activeDomain;
+  const subMap = { overview:'Overview', quarterly:'Quarterly Trending Risk', chronic:'Chronic Absenteeism', main:'' };
+  $('#breadcrumb-sub').textContent = subMap[state.activeSubTab] || state.activeDomain;
+}
+
+function renderContent() {
+  const main = $('#main-content');
+  main.scrollTop = 0;
+  const role = state.role;
+  const isTeacher = role === 'teacher';
+  const isCommunity = role === 'community-partner';
+
+  if (state.activeDomain === 'Attendance') {
+    renderAttendance(main, isTeacher, isCommunity);
+  } else if (state.activeDomain === 'Assessments') {
+    renderAssessments(main);
+  } else if (state.activeDomain === 'Early Warning') {
+    renderPlaceholder(main, 'Early Warning', 'Coming Soon — Early Warning indicators, risk scoring, and intervention tracking will be available in the next release.', 'alert-triangle');
+  } else if (state.activeDomain === 'Academics') {
+    renderPlaceholder(main, 'Academics', 'Coming Soon — Academic performance dashboards, grade distributions, and GPA analytics are in development.', 'book-open');
+  } else {
+    renderPlaceholder(main, state.activeDomain, `This domain is in the roadmap — ${state.activeDomain} dashboards will be available in Phase 2.`, 'clock');
+  }
+
+  refreshIcons();
+}
+
+function renderPlaceholder(main, title, msg, icon) {
+  main.innerHTML = `<div class="p-6 fade-in"><div class="bg-white rounded-xl border border-surface-border p-12 text-center max-w-xl mx-auto mt-12">
+    <div class="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-4"><i data-lucide="${icon}" class="w-8 h-8 text-brand-500"></i></div>
+    <h3 class="text-lg font-bold text-txt-primary mb-2">${title}</h3>
+    <p class="text-sm text-txt-muted leading-relaxed">${msg}</p>
+  </div></div><footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>`;
+}
+
+// ===================== ATTENDANCE =====================
+function renderAttendance(main, isTeacher, isCommunity) {
+  const schoolScope = isTeacher ? 'Lincoln Middle' : null;
+  let html = '<div class="fade-in">';
+
+  // Sub tabs
+  html += `<div class="bg-white border-b border-surface-border px-6 flex gap-1">
+    ${[{k:'overview',l:'Overview'},{k:'quarterly',l:'Quarterly Trending Risk'},{k:'chronic',l:'Chronic Absenteeism'}].map(t =>
+      `<button class="att-subtab px-4 py-3 text-xs font-medium border-b-2 transition-colors ${state.activeSubTab === t.k ? 'border-brand-500 text-brand-500' : 'border-transparent text-txt-muted hover:text-txt-primary'}" data-subtab="${t.k}">${t.l}</button>`
+    ).join('')}
+  </div>`;
+
+  html += '<div class="p-5 space-y-5" id="att-content">';
+
+  if (state.activeSubTab === 'overview') {
+    html += renderAttendanceOverview(isTeacher, isCommunity, schoolScope);
+  } else if (state.activeSubTab === 'quarterly') {
+    html += renderQuarterlyRisk(isTeacher, isCommunity);
+  } else if (state.activeSubTab === 'chronic') {
+    html += renderChronicAbsenteeism(isTeacher, isCommunity);
+  }
+
+  html += '</div></div>';
+  html += '<footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>';
+  main.innerHTML = html;
+
+  // Attach subtab listeners
+  main.querySelectorAll('.att-subtab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activeSubTab = btn.dataset.subtab;
+      updateBreadcrumb();
+      renderContent();
+    });
+  });
+
+  // Render charts
+  setTimeout(() => {
+    if (state.activeSubTab === 'overview') renderOverviewCharts(isCommunity);
+    if (state.activeSubTab === 'quarterly') renderQuarterlyCharts();
+    if (state.activeSubTab === 'chronic') renderChronicCharts();
+    attachFilterListeners();
+    attachTableListeners();
+    attachDownloadListeners();
+  }, 50);
+}
+
+function renderFilterBar(id, filters) {
+  let html = `<div class="bg-white rounded-xl border border-surface-border p-4 sticky top-0 z-10" id="${id}">`;
+  html += '<div class="flex flex-wrap gap-3 items-end">';
+  filters.forEach(f => {
+    html += `<div class="flex flex-col gap-1"><label class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider">${f.label}</label>`;
+    if (f.type === 'select') {
+      html += `<select class="filter-select" data-filter="${f.key}">${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
+    } else {
+      html += `<input type="text" class="filter-select" placeholder="${f.placeholder||''}" data-filter="${f.key}" value="${f.value||''}" style="min-width:150px;">`;
+    }
+    html += '</div>';
+  });
+  html += `<button class="bg-brand-500 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors h-[34px]">Apply Filters</button>`;
+  html += `<button class="text-xs text-brand-500 font-medium hover:underline h-[34px] flex items-center">Reset</button>`;
+  html += `<div class="ml-auto"><button class="download-csv flex items-center gap-1.5 text-xs font-medium text-txt-muted border border-surface-border rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors" data-csv="${id}"><i data-lucide="download" class="w-3.5 h-3.5"></i>Download CSV</button></div>`;
+  html += '</div></div>';
+  return html;
+}
+
+function renderKPICards(cards) {
+  return `<div class="grid grid-cols-2 lg:grid-cols-${cards.length} gap-4">${cards.map(c => `
+    <div class="kpi-card">
+      <div class="flex items-start justify-between mb-1">
+        <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-wider">${c.label}</span>
+        ${c.badge ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${c.badgeClass}">${c.badge}</span>` : ''}
+      </div>
+      <div class="text-2xl font-bold text-txt-primary tabular-nums">${c.value}</div>
+      <div class="text-xs text-txt-muted mt-1">${c.sub}</div>
+      ${c.trend ? `<div class="flex items-center gap-1 mt-2 text-xs font-medium ${c.trendUp ? 'text-success-500' : 'text-danger-500'}"><i data-lucide="${c.trendUp ? 'trending-up' : 'trending-down'}" class="w-3.5 h-3.5"></i>${c.trend}</div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+function renderAttendanceOverview(isTeacher, isCommunity, schoolScope) {
+  let html = '';
+  // Filter bar
+  html += renderFilterBar('att-filters', [
+    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24','2022-23'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
+    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
+    { label:'Attendance Type', key:'type', type:'select', options:['All','Excused','Unexcused','Tardy'] },
+    { label:'Date Range', key:'daterange', type:'text', value:'Aug 2024 – Jun 2025', placeholder:'Date range' },
+    { label:'Day of Week', key:'dow', type:'select', options:['All','Mon','Tue','Wed','Thu','Fri'] }
+  ]);
+
+  // KPIs
+  html += renderKPICards([
+    { label:'Overall Attendance Rate', value:'94.2%', sub:'District Average', trend:'+0.3% vs last year', trendUp:true, badge:'On Track', badgeClass:'bg-success-50 text-success-600' },
+    { label:'Chronically Absent Students', value:'847', sub:'≥10% absences', trend:'-2.1% vs last year', trendUp:true, badge:'Monitor', badgeClass:'bg-warning-50 text-warning-600' },
+    { label:'Average Days Absent', value:'6.8 days', sub:'Per student YTD' },
+    { label:'Perfect Attendance', value:'1,243', sub:'0 absences YTD', badge:'Celebrate', badgeClass:'bg-success-50 text-success-600' }
+  ]);
+
+  // Charts Row 1
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Attendance Rate by School</h4>
+      <div id="chart-school-bar"></div>
+    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Absence Breakdown by Type</h4>
+      <div id="chart-donut"></div>
+    </div>
+  </div>`;
+
+  // Charts Row 2
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Absences by Day of Week</h4>
+      <div id="chart-dow"></div>
+    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Attendance Rate Trend</h4>
+      <div id="chart-monthly"></div>
+    </div>
+  </div>`;
+
+  // Student table (hide for community partner)
+  if (!isCommunity) {
+    html += renderStudentTable();
+  }
+  return html;
+}
+
+function renderStudentTable() {
+  return `<div class="bg-white rounded-xl border border-surface-border p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-sm font-bold text-txt-primary">Student Attendance Details</h4>
+      <div class="relative"><input type="search" id="student-search" placeholder="Search students..." class="filter-select pl-8" style="min-width:200px;"><i data-lucide="search" class="w-3.5 h-3.5 text-txt-light absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i></div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
+          <tr>
+            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="id">Student ID <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="name">Student Name <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="school">School <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="grade">Grade <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="present">Days Present <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 text-right">Excused</th>
+            <th class="px-3 py-2.5 text-right">Unexcused</th>
+            <th class="px-3 py-2.5 text-right">Tardies</th>
+            <th class="px-3 py-2.5 text-right cursor-pointer sortable-th" data-sort="rate">Att. Rate <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+            <th class="px-3 py-2.5 cursor-pointer sortable-th" data-sort="risk">Risk Level <i data-lucide="chevrons-up-down" class="w-3 h-3 inline opacity-40"></i></th>
+          </tr>
+        </thead>
+        <tbody id="student-tbody"></tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between mt-3 text-xs text-txt-muted" id="student-pagination"></div>
+  </div>`;
+}
+
+function renderStudentRows() {
+  let data = [...STUDENTS_DATA];
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    data = data.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+  }
+  if (state.sortCol) {
+    data.sort((a,b) => {
+      let va = a[state.sortCol], vb = b[state.sortCol];
+      if (typeof va === 'number') return state.sortDir === 'asc' ? va - vb : vb - va;
+      return state.sortDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+  }
+  const total = 4521;
+  const start = (state.studentPage-1)*10;
+  const tbody = document.getElementById('student-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map((s,i) => `<tr class="${i%2===0?'':'bg-gray-50/50'} hover:bg-brand-50/30 transition-colors">
+    <td class="px-3 py-2.5 tabular-nums font-medium text-brand-500">${s.id}</td>
+    <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
+    <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
+    <td class="px-3 py-2.5 text-center">${s.grade}</td>
+    <td class="px-3 py-2.5 text-right tabular-nums">${s.present}</td>
+    <td class="px-3 py-2.5 text-right tabular-nums">${s.excAbsent}</td>
+    <td class="px-3 py-2.5 text-right tabular-nums">${s.unexAbsent}</td>
+    <td class="px-3 py-2.5 text-right tabular-nums">${s.tardies}</td>
+    <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${pct(s.rate)}</td>
+    <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.risk)}">${s.risk}</span></td>
+  </tr>`).join('');
+  const pag = document.getElementById('student-pagination');
+  if (pag) pag.innerHTML = `<span>Showing ${start+1}–${Math.min(start+10,total)} of ${num(total)} students</span><div class="flex gap-1"><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50" disabled>Previous</button><button class="px-3 py-1 bg-brand-500 text-white rounded text-xs">1</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">2</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">3</button><span class="px-1">…</span><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">453</button><button class="px-3 py-1 border border-surface-border rounded text-xs hover:bg-gray-50">Next</button></div>`;
+}
+
+function renderOverviewCharts(isCommunity) {
+  const c1 = document.getElementById('chart-school-bar');
+  const c2 = document.getElementById('chart-donut');
+  const c3 = document.getElementById('chart-dow');
+  const c4 = document.getElementById('chart-monthly');
+  if (c1) createStackedHBar(c1, ATTENDANCE_BY_SCHOOL);
+  if (c2) createDonut(c2, ABSENCE_BY_TYPE, '12,847');
+  if (c3) createVerticalBar(c3, ABSENCE_BY_DOW);
+  if (c4) createLineChart(c4, MONTHLY_TREND);
+  if (!isCommunity) renderStudentRows();
+}
+
+// ===================== QUARTERLY RISK =====================
+function renderQuarterlyRisk(isTeacher, isCommunity) {
+  let html = '';
+  html += renderFilterBar('q-filters', [
+    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
+    { label:'Quarter', key:'quarter', type:'select', options:['All','Q1','Q2','Q3','Q4'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
+    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
+    { label:'Risk Level', key:'risk', type:'select', options:['All','Low','At-Risk','Moderate','Chronic'] },
+    { label:'Threshold', key:'threshold', type:'select', options:['5%','10%','15%','20%'] }
+  ]);
+
+  html += renderKPICards([
+    { label:'Students at Risk This Quarter', value:'1,124', sub:'5%+ absence rate', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600' },
+    { label:'Chronic Absenteeism Rate', value:'8.7%', sub:'District-wide', trend:'-0.4% vs last quarter', trendUp:true, badge:'Improving', badgeClass:'bg-success-50 text-success-600' },
+    { label:'Improved Since Last Quarter', value:'312', sub:'Moved to lower risk', badge:'+312', badgeClass:'bg-success-50 text-success-600' },
+    { label:'Worsened Since Last Quarter', value:'189', sub:'Moved to higher risk', badge:'+189', badgeClass:'bg-danger-50 text-danger-600' }
+  ]);
+
+  // Risk Transition Matrix
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+    <h4 class="text-sm font-bold text-txt-primary mb-1">Risk Level Transitions Q2 → Q3</h4>
+    <p class="text-xs text-txt-muted mb-4">How students moved between risk categories</p>
+    <div id="risk-matrix-container"></div>
+  </div>`;
+
+  // Charts row
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Quarterly Chronic Absenteeism Rate by School</h4>
+      <div id="chart-quarterly-line"></div>
+    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">At-Risk & Chronic Students by Grade</h4>
+      <div id="chart-risk-grade"></div>
+    </div>
+  </div>`;
+
+  // Risk criteria
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+    <h4 class="text-sm font-bold text-txt-primary mb-3">Risk Level Criteria</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      ${[
+        { emoji:'🟢', l:'Low Risk', d:'< 5% absences (< 9 days)', bg:'bg-success-50 border-success-500/20' },
+        { emoji:'🟡', l:'At-Risk', d:'5–9.9% absences (9–17 days)', bg:'bg-warning-50 border-warning-500/20' },
+        { emoji:'🟠', l:'Moderate Risk', d:'10–19.9% absences (18–35 days)', bg:'bg-orange-50 border-orange-400/20', style:'background:#fff7ed;' },
+        { emoji:'🔴', l:'Chronic', d:'≥ 20% absences (≥ 36 days)', bg:'bg-danger-50 border-danger-500/20' }
+      ].map(r => `<div class="rounded-lg border p-3 ${r.bg}" ${r.style?'style="'+r.style+'"':''}>
+        <div class="text-lg mb-1">${r.emoji}</div>
+        <div class="text-xs font-bold text-txt-primary">${r.l}</div>
+        <div class="text-[11px] text-txt-muted mt-1">${r.d}</div>
+      </div>`).join('')}
+    </div>
+    <p class="text-[11px] text-txt-muted mt-3 italic">Based on 180-day school year. Thresholds adjustable via filter.</p>
+  </div>`;
+  return html;
+}
+
+function renderRiskMatrix() {
+  const c = document.getElementById('risk-matrix-container');
+  if (!c) return;
+  const colors = ['#10b981','#f59e0b','#f97316','#ef4444'];
+  const bgColors = ['bg-success-50','bg-warning-50','','bg-danger-50'];
+  const maxVal = Math.max(...RISK_MATRIX.flat());
+
+  let html = `<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr>
+    <th class="px-3 py-2 text-[10px] font-semibold text-txt-muted uppercase">Q2 ↓ / Q3 →</th>
+    ${RISK_LABELS.map((l,i) => `<th class="px-3 py-2 text-center text-[10px] font-semibold uppercase" style="color:${colors[i]}">${l}</th>`).join('')}
+    </tr></thead><tbody>`;
+  RISK_MATRIX.forEach((row,ri) => {
+    html += `<tr><td class="px-3 py-2 font-semibold" style="color:${colors[ri]}">${RISK_LABELS[ri]}</td>`;
+    row.forEach((val,ci) => {
+      const intensity = val / maxVal;
+      const isDiag = ri === ci;
+      const alpha = Math.round(intensity * 60 + 10);
+      const bg = isDiag ? `rgba(${ri===0?'16,185,129':ri===1?'245,158,11':ri===2?'249,115,22':'239,68,68'},0.${alpha})` : `rgba(${ri>ci?'16,185,129':'239,68,68'},0.${Math.max(5,alpha-20)})`;
+      html += `<td class="px-3 py-2 text-center font-bold tabular-nums" style="background:${bg};${isDiag?'font-weight:800;':''}"><span>${num(val)}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+function renderQuarterlyCharts() {
+  renderRiskMatrix();
+  const c1 = document.getElementById('chart-quarterly-line');
+  const c2 = document.getElementById('chart-risk-grade');
+  if (c1) createQuarterlyLineChart(c1, QUARTERLY_CHRONIC);
+  if (c2) createGroupedHBar(c2, RISK_BY_GRADE);
+}
+
+// ===================== CHRONIC ABSENTEEISM =====================
+function renderChronicAbsenteeism(isTeacher, isCommunity) {
+  let html = '';
+  html += renderFilterBar('chr-filters', [
+    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
+    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS },
+    { label:'Chronic Threshold', key:'threshold', type:'select', options:['10%','15%','20%'] },
+    { label:'Intervention Status', key:'intervention', type:'select', options:['All','None','Active','Completed'] }
+  ]);
+
+  html += renderKPICards([
+    { label:'Chronically Absent', value:'847 / 8.7%', sub:'Students at ≥10% absence', badge:'High', badgeClass:'bg-danger-50 text-danger-600' },
+    { label:'Severely Chronic (≥20%)', value:'213 / 2.2%', sub:'Students at ≥20% absence', badge:'Critical', badgeClass:'bg-danger-50 text-danger-600' },
+    { label:'State Benchmark', value:'8.0% target', sub:'Current: 8.7% vs Target: 8.0%' },
+    { label:'Improved YTD', value:'156', sub:'Moved to lower risk', badge:'↓', badgeClass:'bg-success-50 text-success-600' },
+    { label:'New Chronic This Month', value:'+34', sub:'Students newly chronic', badge:'Alert', badgeClass:'bg-warning-50 text-warning-600' }
+  ]);
+
+  // Progress bar for state benchmark
+  html += `<div class="bg-white rounded-xl border border-surface-border p-4 -mt-2">
+    <div class="flex items-center justify-between text-xs mb-2"><span class="text-txt-muted font-medium">Progress to State Benchmark</span><span class="font-bold text-txt-primary">8.7% / 8.0% target</span></div>
+    <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-warning-500 to-danger-500" style="width:${Math.min(100, (8.7/8.0)*100)}%"></div></div>
+    <div class="text-[10px] text-txt-muted mt-1">0.7 percentage points above target</div>
+  </div>`;
+
+  // Demographic charts
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by Student Group</h4>
+      <div id="chart-chronic-group"></div>
+    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Chronic Absenteeism by School</h4>
+      <div id="chart-chronic-school-donut"></div>
+    </div>
+  </div>`;
+
+  // Intervention table
+  if (!isCommunity) {
+    html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Students Requiring Intervention</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase tracking-wider">
+            <tr><th class="px-3 py-2.5">Student Name</th><th class="px-3 py-2.5">School</th><th class="px-3 py-2.5">Grade</th><th class="px-3 py-2.5 text-right">Days Absent</th><th class="px-3 py-2.5 text-right">Absence Rate</th><th class="px-3 py-2.5">Risk Level</th><th class="px-3 py-2.5">Counselor</th><th class="px-3 py-2.5">Status</th><th class="px-3 py-2.5">Last Contact</th><th class="px-3 py-2.5">Notes</th></tr>
+          </thead>
+          <tbody>${INTERVENTION_STUDENTS.map((s,i) => `<tr class="${i%2?'bg-gray-50/50':''} hover:bg-brand-50/30">
+            <td class="px-3 py-2.5 font-medium text-txt-primary">${s.name}</td>
+            <td class="px-3 py-2.5 text-txt-muted">${s.school}</td>
+            <td class="px-3 py-2.5">${s.grade}</td>
+            <td class="px-3 py-2.5 text-right tabular-nums font-semibold">${s.absent}</td>
+            <td class="px-3 py-2.5 text-right tabular-nums">${pct(s.rate)}</td>
+            <td class="px-3 py-2.5"><span class="risk-pill ${riskClass(s.risk)}">${s.risk}</span></td>
+            <td class="px-3 py-2.5 text-txt-muted">${s.counselor}</td>
+            <td class="px-3 py-2.5"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.status==='Active'?'bg-success-50 text-success-600':s.status==='Pending'?'bg-warning-50 text-warning-600':'bg-gray-100 text-txt-muted'}">${s.status}</span></td>
+            <td class="px-3 py-2.5 text-txt-muted tabular-nums">${s.lastContact}</td>
+            <td class="px-3 py-2.5 text-txt-muted max-w-[160px] truncate" title="${s.notes}">${s.notes}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // Heatmap
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+    <h4 class="text-sm font-bold text-txt-primary mb-4">Monthly Chronic Absenteeism Rate Heatmap</h4>
+    <div id="chart-chronic-heatmap"></div>
+  </div>`;
+  return html;
+}
+
+function renderChronicCharts() {
+  const c1 = document.getElementById('chart-chronic-group');
+  const c2 = document.getElementById('chart-chronic-school-donut');
+  const c3 = document.getElementById('chart-chronic-heatmap');
+  if (c1) createHorizontalBar(c1, CHRONIC_BY_GROUP);
+  if (c2) {
+    const schoolChronic = [
+      { label:'Washington High', pct:38, count:322, color:'#ef4444' },
+      { label:'Lincoln Middle', pct:24, count:203, color:'#3b82f6' },
+      { label:'Roosevelt K-8', pct:16, count:136, color:'#8b5cf6' },
+      { label:'Adams Elem.', pct:12, count:102, color:'#f59e0b' },
+      { label:'Jefferson Elem.', pct:10, count:84, color:'#10b981' }
+    ];
+    createDonut(c2, schoolChronic, '847');
+  }
+  if (c3) createHeatmap(c3, CHRONIC_HEATMAP, MONTHS_SHORT);
+}
+
+// ===================== ASSESSMENTS =====================
+function renderAssessments(main) {
+  let html = '<div class="p-5 space-y-5 fade-in">';
+
+  // Report selector
+  const assessments = [
+    { n:'NWEA MAP Growth', icon:'bar-chart-3', active:true },
+    { n:'Acadience Reading', icon:'book-open' },
+    { n:'CAASPP/SBAC', icon:'file-check' },
+    { n:'ACT', icon:'award' },
+    { n:'SAT', icon:'award' },
+    { n:'AP Exams', icon:'graduation-cap' },
+    { n:'aimsweb Plus', icon:'activity' },
+    { n:'iReady', icon:'monitor' },
+    { n:'ELPAC', icon:'languages' },
+    { n:'PSAT', icon:'file-text' },
+    { n:'NAEP', icon:'chart-bar' },
+    { n:'District Benchmark', icon:'target' },
+    { n:'Teacher-Created', icon:'pencil' },
+    { n:'DIBELS', icon:'book' },
+    { n:'FastBridge', icon:'zap' }
+  ];
+  html += `<div class="bg-white rounded-xl border border-surface-border p-5">
+    <h4 class="text-sm font-bold text-txt-primary mb-3">Select Assessment Report</h4>
+    <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2">
+      ${assessments.map(a => `<button class="assess-btn flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-medium transition-all ${a.active?'border-brand-500 bg-brand-50 text-brand-600':'border-surface-border text-txt-muted hover:border-brand-300 hover:bg-brand-50/50'}" data-assess="${a.n}">
+        <i data-lucide="${a.icon}" class="w-5 h-5"></i><span class="text-center leading-tight">${a.n}</span>
+      </button>`).join('')}
+    </div>
+  </div>`;
+
+  // NWEA MAP Growth content
+  html += renderFilterBar('assess-filters', [
+    { label:'School Year', key:'year', type:'select', options:['2024-25','2023-24'] },
+    { label:'Term', key:'term', type:'select', options:['All','Fall','Winter','Spring'] },
+    { label:'School', key:'school', type:'select', options:['All',...SCHOOLS] },
+    { label:'Grade', key:'grade', type:'select', options:['All',...GRADES] },
+    { label:'Subject', key:'subject', type:'select', options:['All','Reading','Math','Science'] },
+    { label:'Student Group', key:'group', type:'select', options:STUDENT_GROUPS }
+  ]);
+
+  html += renderKPICards([
+    { label:'Mean RIT Score', value:'214.3', sub:'District Average, All Subjects' },
+    { label:'% Met/Exceeded Growth', value:'62%', sub:'Of students tested', badge:'Good', badgeClass:'bg-success-50 text-success-600' },
+    { label:'% Above Grade Norms', value:'48%', sub:'Scoring above national norm' },
+    { label:'Avg Growth Points', value:'4.2', sub:'Points of growth, Fall→Spring', trend:'+0.8 vs prior year', trendUp:true }
+  ]);
+
+  // Score Distribution
+  html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">RIT Score Distribution</h4>
+      <div id="chart-rit-dist"></div>
+    </div>
+    <div class="bg-white rounded-xl border border-surface-border p-5">
+      <h4 class="text-sm font-bold text-txt-primary mb-4">Growth vs Achievement</h4>
+      <div id="chart-growth-scatter"></div>
+    </div>
+  </div>`;
+
+  html += '</div>';
+  html += '<footer class="py-6 text-center"><p class="text-xs text-txt-light">Made by Copilot</p></footer>';
+  main.innerHTML = html;
+
+  setTimeout(() => {
+    renderAssessmentCharts();
+    refreshIcons();
+    attachFilterListeners();
+    attachDownloadListeners();
+  }, 50);
+}
+
+function renderAssessmentCharts() {
+  // RIT Distribution (histogram)
+  const c1 = document.getElementById('chart-rit-dist');
+  if (c1) {
+    const bins = [
+      { range:'160-170', count:120 },{ range:'170-180', count:340 },{ range:'180-190', count:620 },
+      { range:'190-200', count:980 },{ range:'200-210', count:1240 },{ range:'210-220', count:1180 },
+      { range:'220-230', count:890 },{ range:'230-240', count:540 },{ range:'240-250', count:280 },{ range:'250-260', count:110 }
+    ];
+    const w=520, h=240, margin={t:10,r:20,b:40,l:50};
+    const cw=w-margin.l-margin.r, ch=h-margin.t-margin.b;
+    const maxVal = Math.max(...bins.map(b=>b.count))*1.1;
+    const barW = cw/bins.length - 2;
+    const svg = svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
+    for(let i=0;i<=4;i++){
+      const y=margin.t+(i/4)*ch;
+      svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));
+      svg.appendChild(svgEl('text',{x:margin.l-8,y:y+4,fill:'#94a3b8','font-size':'10','text-anchor':'end','font-family':'Inter,sans-serif'},num(Math.round(maxVal*(1-i/4)))));
+    }
+    // Norm line at 210-220 bin
+    const normX = margin.l + 5*(cw/bins.length) + barW/2;
+    svg.appendChild(svgEl('line',{x1:normX,y1:margin.t,x2:normX,y2:h-margin.b,stroke:'#10b981','stroke-width':'1','stroke-dasharray':'5,3'}));
+    svg.appendChild(svgEl('text',{x:normX+4,y:margin.t+12,fill:'#10b981','font-size':'9','font-family':'Inter,sans-serif'},'Grade Norm'));
+
+    bins.forEach((b,i) => {
+      const x=margin.l+i*(cw/bins.length)+1;
+      const bh=(b.count/maxVal)*ch;
+      const y=margin.t+ch-bh;
+      svg.appendChild(svgEl('rect',{x:x,y:y,width:barW,height:bh,fill:'#3b82f6',rx:'1',class:'chart-bar','data-tip':`${b.range} RIT\n${num(b.count)} students`}));
+      svg.appendChild(svgEl('text',{x:x+barW/2,y:h-margin.b+14,fill:'#64748b','font-size':'9','text-anchor':'middle','font-family':'Inter,sans-serif',transform:`rotate(-30,${x+barW/2},${h-margin.b+14})`},b.range));
+    });
+    c1.innerHTML='';
+    c1.appendChild(svg);
+    attachChartTooltips(c1);
+  }
+
+  // Growth scatter
+  const c2 = document.getElementById('chart-growth-scatter');
+  if (c2) {
+    const w=520,h=260,margin={t:20,r:20,b:40,l:50};
+    const cw=w-margin.l-margin.r,ch=h-margin.t-margin.b;
+    const svg = svgEl('svg',{width:'100%',height:h,viewBox:`0 0 ${w} ${h}`,class:'w-full'});
+    // Grid
+    for(let i=0;i<=4;i++){
+      const y=margin.t+(i/4)*ch;
+      svg.appendChild(svgEl('line',{x1:margin.l,y1:y,x2:w-margin.r,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));
+    }
+    svg.appendChild(svgEl('text',{x:w/2,y:h-4,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif'},'Fall RIT Score'));
+    svg.appendChild(svgEl('text',{x:14,y:h/2,fill:'#64748b','font-size':'10','text-anchor':'middle','font-family':'Inter,sans-serif',transform:`rotate(-90,14,${h/2})`},'Growth Points'));
+
+    // Scatter points
+    const points = [];
+    for(let i=0;i<60;i++){
+      const fallRIT = 170 + Math.random()*80;
+      const growth = -2 + Math.random()*14;
+      const met = growth >= 4;
+      points.push({fallRIT, growth, met});
+    }
+    const xMin=170,xMax=250,yMin2=-2,yMax2=12;
+    points.forEach(p => {
+      const x = margin.l + ((p.fallRIT-xMin)/(xMax-xMin))*cw;
+      const y = margin.t + ((yMax2-p.growth)/(yMax2-yMin2))*ch;
+      svg.appendChild(svgEl('circle',{cx:x,cy:y,r:'4',fill:p.met?'#10b981':'#ef4444',opacity:'0.7',class:'chart-bar','data-tip':`Fall RIT: ${Math.round(p.fallRIT)}\nGrowth: ${p.growth.toFixed(1)}\n${p.met?'Met Target':'Below Target'}`}));
+    });
+    // Target line at growth=4
+    const tY = margin.t + ((yMax2-4)/(yMax2-yMin2))*ch;
+    svg.appendChild(svgEl('line',{x1:margin.l,y1:tY,x2:w-margin.r,y2:tY,stroke:'#64748b','stroke-width':'1','stroke-dasharray':'4,3'}));
+    svg.appendChild(svgEl('text',{x:w-margin.r+2,y:tY-4,fill:'#64748b','font-size':'9','font-family':'Inter,sans-serif'},'Target'));
+
+    c2.innerHTML='';
+    c2.appendChild(svg);
+    const legend = document.createElement('div');
+    legend.className='flex gap-4 mt-2 justify-center';
+    legend.innerHTML='<div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-success-500"></div>Met Growth Target</div><div class="flex items-center gap-1.5 text-xs text-txt-muted"><div class="w-3 h-3 rounded-full bg-danger-500"></div>Below Target</div>';
+    c2.appendChild(legend);
+    attachChartTooltips(c2);
+  }
+}
+
+// ===================== EVENT HANDLERS =====================
+function attachFilterListeners() {
+  // Filters are visual prototype — they show interactivity
+  document.querySelectorAll('.filter-select').forEach(sel => {
+    sel.addEventListener('change', () => {/* prototype */});
+  });
+}
+
+function attachTableListeners() {
+  const search = document.getElementById('student-search');
+  if (search) {
+    search.addEventListener('input', e => {
+      state.searchQuery = e.target.value;
+      renderStudentRows();
+    });
+  }
+  document.querySelectorAll('.sortable-th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (state.sortCol === col) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortCol = col;
+        state.sortDir = 'asc';
+      }
+      renderStudentRows();
+    });
+  });
+}
+
+function attachDownloadListeners() {
+  document.querySelectorAll('.download-csv').forEach(btn => {
+    btn.addEventListener('click', () => {
+      downloadCSV('attendance_data.csv',
+        ['Student ID','Name','School','Grade','Days Present','Excused Absent','Unexcused Absent','Tardies','Attendance Rate','Risk Level'],
+        STUDENTS_DATA.map(s => [s.id,s.name,s.school,s.grade,s.present,s.excAbsent,s.unexAbsent,s.tardies,s.rate,s.risk])
+      );
+    });
+  });
+}
+
+function refreshIcons() {
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+}
+
+// ===================== SCHEMA MODAL =====================
+function renderSchemaModal() {
+  const body = $('#schema-body');
+  body.innerHTML = `
+    <div>
+      <h3 class="text-sm font-bold text-txt-primary mb-3">Core Tables</h3>
+      <div class="space-y-3">
+        ${[
+          { name:'students', cols:'student_id, district_id, school_id, grade, dob, gender, race_ethnicity, el_status, sped_status, free_reduced_lunch, foster_youth, homeless, enrollment_date' },
+          { name:'attendance_records', cols:'record_id, student_id, school_id, date, period, attendance_code, attendance_type, absence_reason, excused_flag, tardy_flag, minutes_absent' },
+          { name:'schools', cols:'school_id, district_id, school_name, school_type, principal_name, address, phone, grades_served' },
+          { name:'assessment_scores', cols:'score_id, student_id, school_id, assessment_name, subject, term, test_date, raw_score, scale_score, percentile, proficiency_level, growth_points, national_norm_rit' },
+          { name:'interventions', cols:'intervention_id, student_id, assigned_staff_id, intervention_type, start_date, end_date, status, notes, last_contact_date' }
+        ].map(t => `<div class="bg-gray-50 rounded-lg p-3">
+          <div class="text-xs font-bold text-brand-600 font-mono mb-1">${t.name}</div>
+          <div class="text-[11px] text-txt-muted font-mono leading-relaxed">${t.cols}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-txt-primary mb-3">Filter-to-Field Mapping</h3>
+      <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-gray-50 text-[10px] font-semibold text-txt-muted uppercase"><tr><th class="px-3 py-2 text-left">UI Filter</th><th class="px-3 py-2 text-left">Table</th><th class="px-3 py-2 text-left">Field</th></tr></thead><tbody>
+        ${[
+          ['School Year','attendance_records','YEAR(date)'],['School','schools','school_name'],['Grade','students','grade'],
+          ['Student Group','students','el_status, sped_status, etc.'],['Attendance Type','attendance_records','attendance_type'],
+          ['Risk Level','(computed)','SUM(absent)/total_days']
+        ].map((r,i) => `<tr class="${i%2?'bg-gray-50/50':''}"><td class="px-3 py-2">${r[0]}</td><td class="px-3 py-2 font-mono text-brand-600">${r[1]}</td><td class="px-3 py-2 font-mono">${r[2]}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-txt-primary mb-3">Sample CSV Downloads</h3>
+      <div class="flex flex-wrap gap-2">
+        ${['students','attendance_records','schools','assessment_scores','interventions'].map(t =>
+          `<button class="schema-csv-btn flex items-center gap-1.5 text-xs font-medium text-brand-500 border border-brand-200 rounded-lg px-3 py-2 hover:bg-brand-50 transition-colors" data-table="${t}"><i data-lucide="download" class="w-3.5 h-3.5"></i>${t}.csv</button>`
+        ).join('')}
+      </div>
+    </div>`;
+  body.querySelectorAll('.schema-csv-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      downloadCSV(btn.dataset.table+'.csv', ['id','field_1','field_2','field_3'], [['1','sample','data','here'],['2','sample','data','here']]);
+    });
+  });
+  refreshIcons();
+}
+
+// ===================== SIDEBAR =====================
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  const sidebar = $('#sidebar');
+  if (state.sidebarCollapsed) {
+    sidebar.style.width = '64px';
+    sidebar.style.minWidth = '64px';
+    sidebar.classList.add('sidebar-collapsed');
+  } else {
+    sidebar.style.width = '220px';
+    sidebar.style.minWidth = '220px';
+    sidebar.classList.remove('sidebar-collapsed');
+  }
+}
+
+// ===================== ROLE SWITCHER =====================
+function updateRole(role) {
+  state.role = role;
+  const banner = $('#role-banner');
+  const bannerText = $('#role-banner-text');
+  if (role === 'district-admin') {
+    banner.classList.add('hidden');
+  } else {
+    banner.classList.remove('hidden');
+    const labels = {
+      'school-admin':'Viewing as: School Admin – Data scoped to your assigned school(s)',
+      'teacher':'Viewing as: Teacher – Data scoped to Lincoln Middle School',
+      'community-partner':'Viewing as: Community Partner – Student-level detail is hidden'
+    };
+    bannerText.textContent = labels[role] || '';
+  }
+  renderContent();
+}
+
+// ===================== INIT =====================
+function init() {
+  renderDomainTabs();
+  renderContent();
+  updateBreadcrumb();
+  renderSchemaModal();
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+
+  // Sidebar nav
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('#sidebar-nav .nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // Role switcher
+  document.getElementById('role-switcher').addEventListener('change', e => updateRole(e.target.value));
+
+  // Schema modal
+  document.getElementById('schema-btn').addEventListener('click', () => {
+    document.getElementById('schema-modal').classList.remove('hidden');
+    refreshIcons();
+  });
+  document.getElementById('schema-close').addEventListener('click', () => {
+    document.getElementById('schema-modal').classList.add('hidden');
+  });
+  document.getElementById('schema-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('schema-modal')) {
+      document.getElementById('schema-modal').classList.add('hidden');
+    }
+  });
+
+  refreshIcons();
+}
+
+// Guard lucide and init
+if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+  lucide.createIcons();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
