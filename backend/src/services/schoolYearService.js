@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  schoolYearService.js  –  DASL read-only SQL Server
 //
-//  School year data is derived primarily from [dbo].[AttendanceLetter]:
+//  School year data is derived primarily from [CoreReports].[AttendanceLetter]:
 //    • SchoolYear (varchar, e.g. "2024-2025")  — human-readable label
 //    • SchoolYearId (uniqueidentifier)          — FK used in tracking tables
 //    • CalendarDate (date)                      — start/end date ranges
@@ -66,7 +66,7 @@ async function getSchoolYearById(schoolYearId) {
       al.SchoolYearId,
       MIN(al.CalendarDate) AS StartDate,
       MAX(al.CalendarDate) AS EndDate
-    FROM [dbo].[AttendanceLetter] al
+    FROM [CoreReports].[AttendanceLetter] al
     WHERE al.SchoolYearId = @schoolYearId
     GROUP BY al.SchoolYear, al.SchoolYearId
   `;
@@ -97,7 +97,7 @@ async function getSchoolYearStats(schoolYear) {
     /* Resolve the SchoolYearId GUID once */
     DECLARE @syId UNIQUEIDENTIFIER = (
       SELECT TOP 1 SchoolYearId
-      FROM [dbo].[AttendanceLetter]
+      FROM [CoreReports].[AttendanceLetter]
       WHERE SchoolYear = @schoolYear
     );
 
@@ -110,7 +110,7 @@ async function getSchoolYearStats(schoolYear) {
         MIN(al.CalendarDate)          AS FirstAttendanceDate,
         MAX(al.CalendarDate)          AS LastAttendanceDate,
         COUNT(DISTINCT al.CalendarDate) AS TotalCalendarDays
-      FROM [dbo].[AttendanceLetter] al
+      FROM [CoreReports].[AttendanceLetter] al
       WHERE al.SchoolYearId = @syId
       GROUP BY al.SchoolYear, al.SchoolYearId
     ),

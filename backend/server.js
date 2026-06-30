@@ -46,6 +46,17 @@ app.use('/api/school-years', schoolYearRoutes);
 app.use('/api/assessments',  assessmentRoutes);
 app.use('/api/interventions',interventionRoutes);
 
+// ─── Diagnostic (remove after confirming correct tables) ─────────────────────
+app.get('/api/debug/diagnose', async (req, res, next) => {
+  try {
+    const { runDiagnostic } = require('./src/utils/yearResolver');
+    const result = await runDiagnostic(req.query.schoolYear || '2024-2025');
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });

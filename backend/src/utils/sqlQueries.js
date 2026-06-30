@@ -1,31 +1,23 @@
 'use strict';
 
-// ─── Helper: resolve SchoolYearId GUID from AttendanceLetter by year label ─────
-// AttendanceLetter.SchoolYear is the human-readable varchar label (e.g. '2024-2025').
-// AttendanceLetter.SchoolYearId is the uniqueidentifier FK shared by all
-// attendance tracking tables, so this subselect returns the correct GUID type.
-const schoolYearIdSubselect =
-  `(SELECT TOP 1 SchoolYearId FROM [CoreReports].[AttendanceLetter]
-    WHERE (@schoolYear IS NULL OR SchoolYear = @schoolYear)
-    ORDER BY SchoolYear DESC)`;
-
-// ─── Subquery: students enrolled in a specific school for the school year ──────
-// AttendanceTrackingYearlySummaryBySchool has SchoolId → tblSchool.SchoolId.
+// ─── School year filter subquery ─────────────────────────────────────────────
 // Used by monthly/quarterly queries that lack a direct SchoolId column.
+// The @schoolYearId parameter is resolved once at the service layer from
+// dbo.tblSchoolYear so this inner query stays cheap.
 function schoolFilterSubquery() {
   return `
     atm.StudentId IN (
       SELECT DISTINCT acs.StudentId
-      FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] acs
+      FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] acs
       INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = acs.SchoolId
       WHERE sch.SchoolName = @school
-        AND acs.SchoolYearId = ${schoolYearIdSubselect}
+        AND acs.SchoolYearId = @schoolYearId
     )`;
 }
 
 // ─── Attendance Summary (KPI cards) ──────────────────────────────────────────
 function buildAttendanceSummaryQuery({ school, grade } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
   const joins = [`INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId`];
 
   if (school && school !== 'all') {
@@ -54,7 +46,7 @@ function buildAttendanceSummaryQuery({ school, grade } = {}) {
             WHEN aty.SchoolDays > 0
              AND (aty.AbsenceDays * 100.0 / aty.SchoolDays) >= 10
             THEN aty.StudentId END)                                  AS ChronicAbsentCount
-    FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
     ${joins.join('\n    ')}
     WHERE ${conditions.join('\n      AND ')}
   `;
@@ -62,7 +54,7 @@ function buildAttendanceSummaryQuery({ school, grade } = {}) {
 
 // ─── School Breakdown ────────────────────────────────────────────────────────
 function buildSchoolBreakdownQuery({ school, grade } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
   const joins = [`INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId`];
 
   if (school && school !== 'all') {
@@ -88,7 +80,7 @@ function buildSchoolBreakdownQuery({ school, grade } = {}) {
             WHEN aty.SchoolDays > 0
              AND (aty.AbsenceDays * 100.0 / aty.SchoolDays) >= 10
             THEN aty.StudentId END)                                               AS ChronicCount
-    FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
     ${joins.join('\n    ')}
     WHERE ${conditions.join('\n      AND ')}
       AND sch.SchoolName IS NOT NULL
@@ -98,9 +90,9 @@ function buildSchoolBreakdownQuery({ school, grade } = {}) {
 }
 
 // ─── Monthly Trend ───────────────────────────────────────────────────────────
-// AttendanceTrackingMonthlySummary has no SchoolId column, so school filter
-// uses a subquery through AttendanceTrackingYearlySummaryBySchool.
-// Year/month integers are used for filtering instead of the GUID SchoolYearId.
+// AttendanceTrackingMonthlySummary has no SchoolId; school filter uses a subquery
+// through AttendanceTrackingYearlySummaryBySchool. Year/month integers used for
+// date range filtering since the monthly table only has Year+Month columns.
 function buildMonthlyTrendQuery({ school, grade } = {}) {
   const conditions = [
     `(@startYear IS NULL OR ((atm.Year = @startYear AND atm.Month >= 8) OR (atm.Year = @endYear AND atm.Month <= 7)))`,
@@ -127,7 +119,7 @@ function buildMonthlyTrendQuery({ school, grade } = {}) {
       SUM(atm.ExcusedAbsenceDays)                                                AS ExcusedDays,
       SUM(atm.UnexcusedAbsenceDays)                                              AS UnexcusedDays,
       SUM(atm.NumberOfTimesTardy)                                                AS TotalTardy
-    FROM [Staging].[AttendanceTrackingMonthlySummary] atm
+    FROM [dbo].[tblAttendanceTrackingMonthlySummary] atm
     ${studentJoin}
     WHERE ${conditions.join('\n      AND ')}
     GROUP BY atm.MonthName, atm.Month, atm.Year
@@ -136,10 +128,8 @@ function buildMonthlyTrendQuery({ school, grade } = {}) {
 }
 
 // ─── Day-of-Week Breakdown ───────────────────────────────────────────────────
-// AttendanceTrackingDailySummaryBySchool has CalendarDate, SchoolId, SchoolYearId
-// and per-day absence totals — used instead of the raw absence cache table.
 function buildAbsenceByDOWQuery({ school, grade } = {}) {
-  const conditions = [`ac.SchoolYearId = ${schoolYearIdSubselect}`, `ac.AbsenceDays > 0`];
+  const conditions = [`ac.SchoolYearId = @schoolYearId`, `ac.AbsenceDays > 0`];
   const joins = [`INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = ac.SchoolId`];
 
   if (school && school !== 'all') {
@@ -156,7 +146,7 @@ function buildAbsenceByDOWQuery({ school, grade } = {}) {
       DATEPART(WEEKDAY, ac.CalendarDate) AS DayNumber,
       COUNT(*)                           AS AbsenceCount,
       SUM(ac.AbsenceDays)                AS TotalAbsenceDays
-    FROM [Staging].[AttendanceTrackingDailySummaryBySchool] ac
+    FROM [dbo].[tblAttendanceTrackingDailySummaryBySchool] ac
     ${joins.join('\n    ')}
     WHERE ${conditions.join('\n      AND ')}
       AND ac.CalendarDate IS NOT NULL
@@ -167,7 +157,7 @@ function buildAbsenceByDOWQuery({ school, grade } = {}) {
 
 // ─── Chronic Absentees List ──────────────────────────────────────────────────
 function buildChronicAbsenteesQuery({ school, grade, threshold = 10 } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
 
   if (school && school !== 'all') {
     conditions.push(`sch.SchoolName = @school`);
@@ -191,9 +181,9 @@ function buildChronicAbsenteesQuery({ school, grade, threshold = 10 } = {}) {
       CASE WHEN aty.SchoolDays > 0
            THEN CAST(aty.AbsenceDays * 100.0 / aty.SchoolDays AS DECIMAL(5,2))
            ELSE 0 END                                                               AS AbsenceRate
-    FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
     INNER JOIN [Mobile].[Students]  s   ON s.StudentId  = aty.StudentId AND s.SchoolYearId = aty.SchoolYearId
-    INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId
+    INNER JOIN [dbo].[tblSchool]    sch ON sch.SchoolId = aty.SchoolId
     WHERE ${conditions.join('\n      AND ')}
       AND aty.SchoolDays > 0
       AND (aty.AbsenceDays * 100.0 / aty.SchoolDays) >= @threshold
@@ -203,7 +193,7 @@ function buildChronicAbsenteesQuery({ school, grade, threshold = 10 } = {}) {
 
 // ─── Risk Distribution ───────────────────────────────────────────────────────
 function buildRiskDistributionQuery({ school, grade } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
   const joins = [`INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId`];
 
   if (school && school !== 'all') {
@@ -221,22 +211,21 @@ function buildRiskDistributionQuery({ school, grade } = {}) {
         CASE WHEN aty.SchoolDays > 0
              THEN aty.AbsenceDays * 100.0 / aty.SchoolDays
              ELSE 0 END AS AbsenceRate
-      FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+      FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
       ${joins.join('\n      ')}
       WHERE ${conditions.join('\n        AND ')}
     )
     SELECT
-      COUNT(CASE WHEN AbsenceRate <  2                             THEN 1 END) AS OnTrack,
-      COUNT(CASE WHEN AbsenceRate >= 2  AND AbsenceRate <  5      THEN 1 END) AS Moderate,
-      COUNT(CASE WHEN AbsenceRate >= 5  AND AbsenceRate < 10      THEN 1 END) AS AtRisk,
-      COUNT(CASE WHEN AbsenceRate >= 10                           THEN 1 END) AS Chronic,
-      COUNT(*)                                                                  AS Total
+      COUNT(CASE WHEN AbsenceRate <  2                        THEN 1 END) AS OnTrack,
+      COUNT(CASE WHEN AbsenceRate >= 2  AND AbsenceRate <  5  THEN 1 END) AS Moderate,
+      COUNT(CASE WHEN AbsenceRate >= 5  AND AbsenceRate < 10  THEN 1 END) AS AtRisk,
+      COUNT(CASE WHEN AbsenceRate >= 10                       THEN 1 END) AS Chronic,
+      COUNT(*)                                                              AS Total
     FROM StudentRates
   `;
 }
 
 // ─── Quarterly Risk ──────────────────────────────────────────────────────────
-// Uses Year/Month filtering; school filter uses the YearlySummaryBySchool subquery.
 function buildQuarterlyRiskQuery({ school, grade, quarter } = {}) {
   const conditions = [
     `(@startYear IS NULL OR ((atm.Year = @startYear AND atm.Month >= 8) OR (atm.Year = @endYear AND atm.Month <= 7)))`,
@@ -272,7 +261,7 @@ function buildQuarterlyRiskQuery({ school, grade, quarter } = {}) {
         SUM(atm.ExcusedAbsenceDays)   AS ExcusedDays,
         SUM(atm.UnexcusedAbsenceDays) AS UnexcusedDays,
         COUNT(DISTINCT atm.Month)     AS MonthCount
-      FROM [Staging].[AttendanceTrackingMonthlySummary] atm
+      FROM [dbo].[tblAttendanceTrackingMonthlySummary] atm
       ${studentJoin}
       WHERE ${conditions.join('\n        AND ')}
       GROUP BY atm.StudentId
@@ -288,7 +277,7 @@ function buildQuarterlyRiskQuery({ school, grade, quarter } = {}) {
 
 // ─── Truancy List ────────────────────────────────────────────────────────────
 function buildTruancyListQuery({ school, grade, threshold = 10 } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
 
   if (school && school !== 'all') {
     conditions.push(`sch.SchoolName = @school`);
@@ -313,9 +302,9 @@ function buildTruancyListQuery({ school, grade, threshold = 10 } = {}) {
         CASE WHEN aty.SchoolDays > 0
              THEN CAST(aty.AbsenceDays * 100.0 / aty.SchoolDays AS DECIMAL(5,2))
              ELSE 0 END                                                     AS AbsenceRate
-      FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+      FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
       INNER JOIN [Mobile].[Students]  s   ON s.StudentId  = aty.StudentId AND s.SchoolYearId = aty.SchoolYearId
-      INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId
+      INNER JOIN [dbo].[tblSchool]    sch ON sch.SchoolId = aty.SchoolId
       WHERE ${conditions.join('\n        AND ')}
         AND aty.SchoolDays > 0
         AND (aty.AbsenceDays * 100.0 / aty.SchoolDays) >= @threshold
@@ -328,7 +317,7 @@ function buildTruancyListQuery({ school, grade, threshold = 10 } = {}) {
 
 // ─── Student List ────────────────────────────────────────────────────────────
 function buildStudentListQuery({ school, grade, search, riskLevel } = {}) {
-  const conditions = [`aty.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`aty.SchoolYearId = @schoolYearId`];
 
   if (school && school !== 'all') {
     conditions.push(`sch.SchoolName = @school`);
@@ -371,9 +360,9 @@ function buildStudentListQuery({ school, grade, search, riskLevel } = {}) {
         CASE WHEN aty.SchoolDays > 0
              THEN CAST(aty.AbsenceDays * 100.0 / aty.SchoolDays AS DECIMAL(5,2))
              ELSE 0 END                                                     AS AbsenceRate
-      FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+      FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
       INNER JOIN [Mobile].[Students]  s   ON s.StudentId  = aty.StudentId AND s.SchoolYearId = aty.SchoolYearId
-      INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId
+      INNER JOIN [dbo].[tblSchool]    sch ON sch.SchoolId = aty.SchoolId
       WHERE ${conditions.join('\n        AND ')}
     )
     SELECT TOP 500 *
@@ -384,7 +373,7 @@ function buildStudentListQuery({ school, grade, search, riskLevel } = {}) {
 }
 
 // ─── Student Detail ──────────────────────────────────────────────────────────
-// Students view already contains SchoolName, so no tblSchool join is needed.
+// Mobile.Students view contains SchoolName directly — no tblSchool join needed.
 function buildStudentDetailQuery() {
   return `
     SELECT
@@ -420,17 +409,15 @@ function buildStudentDetailQuery() {
            THEN CAST(aty.AbsenceDays * 100.0 / aty.SchoolDays AS DECIMAL(5,2))
            ELSE 0 END                                                       AS AbsenceRate
     FROM [Mobile].[Students] s
-    LEFT JOIN [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    LEFT JOIN [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
           ON aty.StudentId    = s.StudentId
-         AND aty.SchoolYearId = s.SchoolYearId
+         AND aty.SchoolYearId = @schoolYearId
     WHERE s.StudentId    = @studentId
-      AND s.SchoolYearId = ${schoolYearIdSubselect}
+      AND s.SchoolYearId = @schoolYearId
   `;
 }
 
 // ─── Student Absence Calendar ────────────────────────────────────────────────
-// AttendanceTrackingDailySummaryBySchool has CalendarDate, SchoolYearId,
-// and per-day absence breakdown per student per school.
 function buildStudentAbsenceCalendarQuery() {
   return `
     SELECT
@@ -438,9 +425,9 @@ function buildStudentAbsenceCalendarQuery() {
       ac.AbsenceDays,
       ac.ExcusedAbsenceDays,
       ac.UnexcusedAbsenceDays
-    FROM [Staging].[AttendanceTrackingDailySummaryBySchool] ac
+    FROM [dbo].[tblAttendanceTrackingDailySummaryBySchool] ac
     WHERE ac.StudentId    = @studentId
-      AND ac.SchoolYearId = ${schoolYearIdSubselect}
+      AND ac.SchoolYearId = @schoolYearId
       AND ac.AbsenceDays  > 0
     ORDER BY ac.CalendarDate
   `;
@@ -452,10 +439,10 @@ function buildSchoolListQuery() {
     SELECT DISTINCT
       sch.SchoolId,
       sch.SchoolName
-    FROM [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    FROM [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
     INNER JOIN [dbo].[tblSchool] sch ON sch.SchoolId = aty.SchoolId
     WHERE sch.SchoolName IS NOT NULL
-      AND aty.SchoolYearId = ${schoolYearIdSubselect}
+      AND aty.SchoolYearId = @schoolYearId
     ORDER BY SchoolName
   `;
 }
@@ -467,15 +454,16 @@ function buildSchoolDetailQuery() {
       sch.SchoolId,
       sch.SchoolName
     FROM [dbo].[tblSchool] sch
-    INNER JOIN [Staging].[AttendanceTrackingYearlySummaryBySchool] aty
+    INNER JOIN [dbo].[tblAttendanceTrackingYearlySummaryBySchool] aty
           ON aty.SchoolId    = sch.SchoolId
-         AND aty.SchoolYearId = ${schoolYearIdSubselect}
+         AND aty.SchoolYearId = @schoolYearId
     WHERE sch.SchoolName = @school
   `;
 }
 
 // ─── School Year List ─────────────────────────────────────────────────────────
-// AttendanceLetter.SchoolYear holds the human-readable label (e.g. '2024-2025').
+// AttendanceLetter is fine for a one-time dropdown load; it's only slow when
+// embedded as a scalar subquery in every WHERE clause (which we no longer do).
 function buildSchoolYearListQuery() {
   return `
     SELECT DISTINCT SchoolYear
@@ -486,6 +474,7 @@ function buildSchoolYearListQuery() {
 }
 
 // ─── Intervention List ───────────────────────────────────────────────────────
+// AbsenceInterventionChecklist stores SchoolYear as varchar ('2024-2025'), not a GUID.
 function buildInterventionListQuery({ school, grade, status } = {}) {
   const conditions = [`aic.SchoolYear = @schoolYear`];
 
@@ -521,10 +510,10 @@ function buildInterventionListQuery({ school, grade, status } = {}) {
 }
 
 // ─── Assessment List ─────────────────────────────────────────────────────────
-// Students view provides SchoolYearId, SchoolName, GradeLevelName.
-// AssessmentTypes PK is AssessmentType_Id; AssessmentStudent FK is AssessmentTypeId.
+// Mobile.Students provides SchoolYearId, SchoolName, GradeLevelName.
+// dm.AssessmentTypes PK is AssessmentType_Id; Staging.AssessmentStudent FK is AssessmentTypeId.
 function buildAssessmentListQuery({ school, grade, subject } = {}) {
-  const conditions = [`s.SchoolYearId = ${schoolYearIdSubselect}`];
+  const conditions = [`s.SchoolYearId = @schoolYearId`];
 
   if (school && school !== 'all') {
     conditions.push(`s.SchoolName = @school`);
@@ -551,8 +540,8 @@ function buildAssessmentListQuery({ school, grade, subject } = {}) {
       at2.Abbreviation,
       asc2.Score
     FROM [Staging].[AssessmentStudent] ast
-    INNER JOIN [Mobile].[Students]             s    ON s.StudentId          = ast.StudentId
-    INNER JOIN [dm].[AssessmentTypes]      at2  ON at2.AssessmentType_Id = ast.AssessmentTypeId
+    INNER JOIN [Mobile].[Students]              s    ON s.StudentId          = ast.StudentId
+    INNER JOIN [dm].[AssessmentTypes]           at2  ON at2.AssessmentType_Id = ast.AssessmentTypeId
     LEFT  JOIN [Staging].[AssessmentStudentCat] asc2 ON asc2.AssessmentStudentId = ast.AssessmentStudentId
     WHERE ${conditions.join('\n      AND ')}
     ORDER BY ast.TestDate DESC

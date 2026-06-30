@@ -1,6 +1,8 @@
 'use strict';
-const { getPool }  = require('../config/database');
-const logger       = require('../utils/logger');
+const sql                    = require('mssql');
+const { getPool }            = require('../config/database');
+const logger                 = require('../utils/logger');
+const { resolveSchoolYearId } = require('../utils/yearResolver');
 const {
   buildSchoolListQuery,
   buildSchoolDetailQuery,
@@ -8,22 +10,22 @@ const {
 
 async function getSchools(filters = {}) {
   logger.debug('getSchools', filters);
-  const sql     = require('mssql');
-  const pool    = await getPool();
-  const request = pool.request();
-  request.input('schoolYear', sql.NVarChar, filters.schoolYear || '2024-2025');
-  const result  = await request.query(buildSchoolListQuery());
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear || '2024-2025');
+  const request      = pool.request();
+  request.input('schoolYearId', sql.UniqueIdentifier, schoolYearId);
+  const result = await request.query(buildSchoolListQuery());
   return result.recordset;
 }
 
 async function getSchoolDetail(filters = {}) {
   logger.debug('getSchoolDetail', filters);
-  const sql     = require('mssql');
-  const pool    = await getPool();
-  const request = pool.request();
-  request.input('schoolYear', sql.NVarChar, filters.schoolYear || '2024-2025');
-  request.input('school',     sql.NVarChar, filters.school);
-  const result  = await request.query(buildSchoolDetailQuery());
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear || '2024-2025');
+  const request      = pool.request();
+  request.input('schoolYearId', sql.UniqueIdentifier, schoolYearId);
+  request.input('school',       sql.NVarChar,         filters.school);
+  const result = await request.query(buildSchoolDetailQuery());
   return result.recordset[0] || null;
 }
 

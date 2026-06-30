@@ -1,6 +1,7 @@
 'use strict';
-const { getPool }   = require('../config/database');
-const logger        = require('../utils/logger');
+const { getPool }            = require('../config/database');
+const logger                 = require('../utils/logger');
+const { resolveSchoolYearId } = require('../utils/yearResolver');
 const {
   buildAttendanceSummaryQuery,
   buildSchoolBreakdownQuery,
@@ -12,19 +13,14 @@ const {
   buildTruancyListQuery,
 } = require('../utils/sqlQueries');
 
-/** Helper: bind common filter params onto an mssql Request */
-const DEFAULT_YEAR = process.env.DEFAULT_SCHOOL_YEAR || '2025-2026';
-function bindFilters(request, { schoolYear, school, grade, absenceType, threshold, month, quarter } = {}) {
+// Bind common filter params. @schoolYearId is the pre-resolved GUID so SQL
+// never needs the expensive CoreReports.AttendanceLetter subquery.
+function bindFilters(request, { schoolYearId, schoolYear, school, grade, threshold } = {}) {
   const sql = require('mssql');
-  // Always bind @schoolYear (null when omitted) so SQL references never fail;
-  // queries default to the most recent year when the value is NULL.
- request.input('schoolYear', sql.NVarChar, schoolYear || '2025-2026');
 
+  request.input('schoolYearId', sql.UniqueIdentifier, schoolYearId || null);
 
-  // Bind @startYear / @endYear for monthly-summary queries.
-  // tblAttendanceTrackingMonthlySummary.SchoolYearId is a uniqueidentifier and
-  // cannot be compared to the VARCHAR '2024-2025' returned by schoolYearIdSubselect,
-  // so those queries filter by atm.Year / atm.Month instead.
+  // @startYear / @endYear used by monthly and quarterly trend queries.
   if (schoolYear && /^\d{4}-\d{4}$/.test(schoolYear)) {
     const parts = schoolYear.split('-');
     request.input('startYear', sql.Int, parseInt(parts[0], 10));
@@ -34,96 +30,98 @@ function bindFilters(request, { schoolYear, school, grade, absenceType, threshol
     request.input('endYear',   sql.Int, null);
   }
 
-  if (school && school !== 'all') request.input('school', sql.NVarChar, school);
-  if (grade  && grade  !== 'all') request.input('grade',  sql.NVarChar, grade);
-  if (threshold != null)          request.input('threshold', sql.Decimal(5,2), Number(threshold));
+  if (school && school !== 'all') request.input('school',    sql.NVarChar,      school);
+  if (grade  && grade  !== 'all') request.input('grade',     sql.NVarChar,      grade);
+  if (threshold != null)          request.input('threshold', sql.Decimal(5, 2), Number(threshold));
 }
 
 // ─── Attendance Summary (KPI cards) ──────────────────────────────────────────
 async function getAttendanceSummary(filters = {}) {
   logger.debug('getAttendanceSummary', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildAttendanceSummaryQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildAttendanceSummaryQuery(filters));
   return result.recordset[0] || {};
 }
 
 // ─── School Breakdown ─────────────────────────────────────────────────────────
 async function getSchoolBreakdown(filters = {}) {
   logger.debug('getSchoolBreakdown', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildSchoolBreakdownQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildSchoolBreakdownQuery(filters));
   return result.recordset;
 }
 
 // ─── Monthly Trend ────────────────────────────────────────────────────────────
 async function getMonthlyTrend(filters = {}) {
   logger.debug('getMonthlyTrend', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildMonthlyTrendQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildMonthlyTrendQuery(filters));
   return result.recordset;
 }
 
 // ─── Day-of-Week ──────────────────────────────────────────────────────────────
 async function getAbsenceByDOW(filters = {}) {
   logger.debug('getAbsenceByDOW', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildAbsenceByDOWQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildAbsenceByDOWQuery(filters));
   return result.recordset;
 }
 
 // ─── Chronic Absentees ────────────────────────────────────────────────────────
 async function getChronicAbsentees(filters = {}) {
   logger.debug('getChronicAbsentees', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, { ...filters, threshold: filters.threshold ?? 10 });
-  const query  = buildChronicAbsenteesQuery({ ...filters, threshold: filters.threshold ?? 10 });
-  const result = await request.query(query);
+  const effectiveFilters = { ...filters, threshold: filters.threshold ?? 10 };
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...effectiveFilters, schoolYearId });
+  const result = await request.query(buildChronicAbsenteesQuery(effectiveFilters));
   return result.recordset;
 }
 
 // ─── Risk Distribution ────────────────────────────────────────────────────────
 async function getRiskDistribution(filters = {}) {
   logger.debug('getRiskDistribution', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildRiskDistributionQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildRiskDistributionQuery(filters));
   return result.recordset[0] || {};
 }
 
 // ─── Quarterly Risk ───────────────────────────────────────────────────────────
 async function getQuarterlyRisk(filters = {}) {
   logger.debug('getQuarterlyRisk', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, filters);
-  const query  = buildQuarterlyRiskQuery(filters);
-  const result = await request.query(query);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...filters, schoolYearId });
+  const result = await request.query(buildQuarterlyRiskQuery(filters));
   return result.recordset;
 }
 
 // ─── Truancy List ─────────────────────────────────────────────────────────────
 async function getTruancyList(filters = {}) {
   logger.debug('getTruancyList', filters);
-  const pool    = await getPool();
-  const request = pool.request();
-  bindFilters(request, { ...filters, threshold: filters.threshold ?? 10 });
-  const query  = buildTruancyListQuery({ ...filters, threshold: filters.threshold ?? 10 });
-  const result = await request.query(query);
+  const effectiveFilters = { ...filters, threshold: filters.threshold ?? 10 };
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const request      = pool.request();
+  bindFilters(request, { ...effectiveFilters, schoolYearId });
+  const result = await request.query(buildTruancyListQuery(effectiveFilters));
   return result.recordset;
 }
 

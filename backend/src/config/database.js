@@ -21,9 +21,10 @@ const config = {
     // Only pass instanceName when the env var is actually set
     ...(process.env.DB_INSTANCE ? { instanceName: process.env.DB_INSTANCE } : {}),
   },
+  requestTimeout: 30000,
   pool: {
-    max:               10,
-    min:               0,
+    max:               30,
+    min:               2,
     idleTimeoutMillis: 30000,
   },
 };
