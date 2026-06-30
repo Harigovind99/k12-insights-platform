@@ -5,7 +5,7 @@ const helmet     = require('helmet');
 const morgan     = require('morgan');
 require('dotenv').config();
 
-const { initPool } = require('./src/config/database');
+const { getPool } = require('./src/config/database');
 const logger       = require('./src/utils/logger');
 
 // ─── Route imports (CommonJS — exact filenames on disk) ───────────────────────
@@ -60,7 +60,7 @@ app.use((err, _req, res, _next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 async function start() {
   try {
-    await initPool();
+    await getPool();
     logger.info('Database pool initialised');
   } catch (err) {
     logger.warn('DB pool failed on startup (will retry on first request):', err.message);

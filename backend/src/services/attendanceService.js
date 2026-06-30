@@ -15,7 +15,9 @@ const {
 /** Helper: bind common filter params onto an mssql Request */
 function bindFilters(request, { schoolYear, school, grade, absenceType, threshold, month, quarter } = {}) {
   const sql = require('mssql');
-  if (schoolYear)  request.input('schoolYear',  sql.NVarChar, schoolYear);
+  // Always bind @schoolYear (null when omitted) so SQL references never fail;
+  // queries default to the most recent year when the value is NULL.
+  request.input('schoolYear', sql.NVarChar, schoolYear || null);
   if (school && school !== 'all') request.input('school', sql.NVarChar, school);
   if (grade  && grade  !== 'all') request.input('grade',  sql.NVarChar, grade);
   if (threshold != null)          request.input('threshold', sql.Decimal(5,2), Number(threshold));

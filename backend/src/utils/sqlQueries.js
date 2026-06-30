@@ -13,8 +13,9 @@
  */
 
 // ─── Helper: resolve SchoolYearId GUID from varchar label ────────────────────
+// When @schoolYear is NULL, ORDER BY DESC + TOP 1 returns the most recent year.
 const schoolYearIdSubselect =
-  `(SELECT TOP 1 SchoolYearId FROM [dbo].[AttendanceLetter] WHERE SchoolYear = @schoolYear)`;
+  `(SELECT TOP 1 SchoolYearId FROM [dbo].[AttendanceLetter] WHERE (@schoolYear IS NULL OR SchoolYear = @schoolYear) ORDER BY SchoolYear DESC)`;
 
 // ─── Attendance Summary (KPI cards) ──────────────────────────────────────────
 function buildAttendanceSummaryQuery({ school, grade, absenceType } = {}) {
@@ -124,7 +125,7 @@ function buildMonthlyTrendQuery({ school, grade } = {}) {
 // ─── Day-of-Week Breakdown ────────────────────────────────────────────────────
 // Uses AttendanceLetter because we need CalendarDate granularity
 function buildAbsenceByDOWQuery({ school, grade } = {}) {
-  const conditions = [`al.SchoolYear = @schoolYear`];
+  const conditions = [`al.SchoolYear = ISNULL(@schoolYear, (SELECT TOP 1 SchoolYear FROM [dbo].[AttendanceLetter] ORDER BY SchoolYear DESC))`];
 
   if (school && school !== 'all') {
     conditions.push(`al.SchoolName = @school`);
