@@ -13,11 +13,27 @@ const {
 } = require('../utils/sqlQueries');
 
 /** Helper: bind common filter params onto an mssql Request */
+const DEFAULT_YEAR = process.env.DEFAULT_SCHOOL_YEAR || '2025-2026';
 function bindFilters(request, { schoolYear, school, grade, absenceType, threshold, month, quarter } = {}) {
   const sql = require('mssql');
   // Always bind @schoolYear (null when omitted) so SQL references never fail;
   // queries default to the most recent year when the value is NULL.
-  request.input('schoolYear', sql.NVarChar, schoolYear || null);
+ request.input('schoolYear', sql.NVarChar, schoolYear || '2025-2026');
+
+
+  // Bind @startYear / @endYear for monthly-summary queries.
+  // tblAttendanceTrackingMonthlySummary.SchoolYearId is a uniqueidentifier and
+  // cannot be compared to the VARCHAR '2024-2025' returned by schoolYearIdSubselect,
+  // so those queries filter by atm.Year / atm.Month instead.
+  if (schoolYear && /^\d{4}-\d{4}$/.test(schoolYear)) {
+    const parts = schoolYear.split('-');
+    request.input('startYear', sql.Int, parseInt(parts[0], 10));
+    request.input('endYear',   sql.Int, parseInt(parts[1], 10));
+  } else {
+    request.input('startYear', sql.Int, null);
+    request.input('endYear',   sql.Int, null);
+  }
+
   if (school && school !== 'all') request.input('school', sql.NVarChar, school);
   if (grade  && grade  !== 'all') request.input('grade',  sql.NVarChar, grade);
   if (threshold != null)          request.input('threshold', sql.Decimal(5,2), Number(threshold));
