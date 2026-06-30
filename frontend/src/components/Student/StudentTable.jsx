@@ -3,19 +3,39 @@ import { Link } from 'react-router-dom';
 import { User } from 'lucide-react';
 import clsx from 'clsx';
 import FilterBar  from '@/components/Filters/FilterBar';
-import LoadingSpinner from '@/components/Common/LoadingSpinner';
 import { useStudents } from '@/hooks/useStudents';
 import { useAppContext } from '@/contexts/AppContext';
 import { riskClass, riskLabel, fmt } from '@/utils/helpers';
 import { STUDENT_LEVEL_ROLES } from '@/utils/constants';
 
-const COLUMNS = [
-  { key: 'name',               label: 'Student' },
-  { key: 'school_name',        label: 'School' },
-  { key: 'grade',              label: 'Grade' },
-  { key: 'absence_rate',       label: 'Absence %' },
-  { key: 'risk',               label: 'Risk' },
-  { key: 'intervention_status',label: 'Intervention' },
+// SQL returns PascalCase field names directly from DASL
+function studentName(s) {
+  return `${s.FirstName ?? ''} ${s.LastName ?? ''}`.trim() || '—';
+}
+
+function buildCSVRows(students) {
+  return [
+    ['Student ID','Name','School','Grade','Days Absent','Absence %','Risk','Tardy'],
+    ...students.map(s => [
+      s.StudentNumber ?? s.StudentId,
+      studentName(s),
+      s.SchoolName ?? '—',
+      s.GradeLevel ?? '—',
+      s.AbsenceDays ?? 0,
+      fmt.pct(s.AbsenceRate ?? 0),
+      riskLabel(s.AbsenceRate ?? 0),
+      s.NumberOfTimesTardy ?? 0,
+    ]),
+  ];
+}
+
+const SORT_COLS = [
+  { key: 'LastName',    label: 'Student' },
+  { key: 'SchoolName',  label: 'School' },
+  { key: 'GradeLevel',  label: 'Grade' },
+  { key: 'AbsenceDays', label: 'Days Absent' },
+  { key: 'AbsenceRate', label: 'Absence %' },
+  { key: 'Risk',        label: 'Risk Level' },
 ];
 
 export default function StudentTable() {
@@ -25,113 +45,134 @@ export default function StudentTable() {
   const { students, total, page, totalPages, loading, error,
           sortCol, sortDir, toggleSort, nextPage, prevPage } = useStudents();
 
+  const count = students.length > 0 ? students.length : total;
+
   const SortIcon = ({ col }) => {
-    if (sortCol !== col) return <span className="text-txt-light ml-1">↕</span>;
+    if (sortCol !== col) return <span className="text-txt-muted ml-1 opacity-40">↕</span>;
     return <span className="text-brand-500 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold text-txt-primary">Students</h1>
-        <p className="text-sm text-txt-muted mt-0.5">
-          {total.toLocaleString()} students matching current filters
-        </p>
-      </div>
+    <div className="flex flex-col h-full overflow-y-auto animate-fade-in">
 
+      {/* Sticky filter bar */}
       <FilterBar
-        show={['schoolYear', 'school', 'grade', 'group', 'riskLevel', 'interventionStatus', 'search']}
+        show={['schoolYear','school','grade','group','riskLevel','interventionStatus','search']}
         data={students.length ? buildCSVRows(students) : null}
         csvFilename="students.csv"
+        loading={loading}
       />
 
-      {error && (
-        <div className="rounded-xl bg-danger-light border border-red-200 p-4 text-danger-dark text-sm">
-          {error}
+      <div className="p-6 space-y-5">
+        <div>
+          <h1 className="text-xl font-bold text-txt-primary">Students</h1>
+          <p className="text-sm text-txt-muted mt-0.5">
+            {count.toLocaleString()} students matching current filters
+          </p>
         </div>
-      )}
 
-      <div className="bg-surface-card rounded-xl border border-surface-border overflow-hidden">
-        {loading ? (
-          <LoadingSpinner className="m-16" />
-        ) : (
-          <>
-            <div className="overflow-x-auto custom-scroll">
-              <table className="w-full text-sm">
-                <thead className="bg-surface-bg border-b border-surface-border">
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-surface-card rounded-xl border border-surface-border overflow-hidden">
+          <div className="overflow-x-auto scrollbar-thin">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-surface-border sticky top-0">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide w-8">#</th>
+                  {SORT_COLS.map(({ key, label }) => (
+                    <th
+                      key={key}
+                      onClick={() => toggleSort(key)}
+                      className="text-left px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide cursor-pointer hover:text-txt-primary select-none whitespace-nowrap"
+                    >
+                      {label}<SortIcon col={key} />
+                    </th>
+                  ))}
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide">Tardy</th>
+                  {canViewDetail && (
+                    <th className="px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide" />
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-border">
+                {loading ? (
                   <tr>
-                    {COLUMNS.map(({ key, label }) => (
-                      <th
-                        key={key}
-                        onClick={() => toggleSort(key)}
-                        className="text-left px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide cursor-pointer hover:text-txt-primary select-none whitespace-nowrap"
-                      >
-                        {label}<SortIcon col={key} />
-                      </th>
-                    ))}
-                    {canViewDetail && (
-                      <th className="px-4 py-3 text-xs font-semibold text-txt-muted uppercase tracking-wide" />
-                    )}
+                    <td colSpan={SORT_COLS.length + 3} className="py-16 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="loading-dot"/><span className="loading-dot"/><span className="loading-dot"/>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-border">
-                  {students.length === 0 ? (
-                    <tr>
-                      <td colSpan={COLUMNS.length + 1} className="py-16 text-center text-txt-muted text-sm">
-                        No students match the current filters.
+                ) : students.length === 0 ? (
+                  <tr>
+                    <td colSpan={SORT_COLS.length + 3} className="py-16 text-center text-txt-muted text-sm">
+                      No students match the current filters.
+                    </td>
+                  </tr>
+                ) : students.map((s, idx) => {
+                  const absRate = s.AbsenceRate ?? 0;
+                  const maxDays = 180;
+                  const pctBar  = Math.min(100, (absRate / 20) * 100);
+                  const barColor = absRate >= 10 ? '#ef4444' : absRate >= 5 ? '#f97316' : absRate >= 2 ? '#f59e0b' : '#16a34a';
+                  return (
+                    <tr key={s.StudentId ?? idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-txt-muted text-xs">
+                        {(page - 1) * 25 + idx + 1}
                       </td>
-                    </tr>
-                  ) : students.map((s) => {
-                    const absRate = s.absence_rate ?? 0;
-                    return (
-                      <tr key={s.student_id} className="hover:bg-surface-bg transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
-                              <User size={13} className="text-brand-600" />
-                            </div>
-                            <span className="font-medium text-txt-primary">
-                              {s.name ?? `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim()}
-                            </span>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                            <User size={13} className="text-brand-600" />
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-txt-muted">{s.school_name ?? s.school ?? '—'}</td>
-                        <td className="px-4 py-3 text-txt-muted">{s.grade}</td>
-                        <td className="px-4 py-3 font-semibold text-txt-primary">{fmt.pct(absRate)}</td>
+                          <div>
+                            <p className="font-medium text-txt-primary leading-tight">{studentName(s)}</p>
+                            <p className="text-xs text-txt-muted">{s.StudentNumber}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-txt-muted">{s.SchoolName ?? '—'}</td>
+                      <td className="px-4 py-3 text-txt-muted">{s.GradeLevel ?? '—'}</td>
+                      <td className="px-4 py-3 font-medium text-txt-primary">{s.AbsenceDays ?? 0}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-txt-primary">{fmt.pct(absRate)}</span>
+                          <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width:`${pctBar}%`, background: barColor }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={clsx('risk-pill', riskClass(absRate))}>
+                          {riskLabel(absRate)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-txt-muted">{s.NumberOfTimesTardy ?? 0}</td>
+                      {canViewDetail && (
                         <td className="px-4 py-3">
-                          <span className={clsx('risk-pill', riskClass(absRate))}>{riskLabel(absRate)}</span>
+                          <Link
+                            to={`/students/${s.StudentId}`}
+                            className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline whitespace-nowrap"
+                          >
+                            View Profile →
+                          </Link>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={clsx(
-                            'text-xs font-medium px-2 py-0.5 rounded-full capitalize',
-                            s.intervention_status === 'active'    ? 'bg-brand-100 text-brand-700' :
-                            s.intervention_status === 'completed' ? 'bg-success-light text-success-dark' :
-                            'bg-surface-bg text-txt-muted border border-surface-border'
-                          )}>
-                            {s.intervention_status ?? 'None'}
-                          </span>
-                        </td>
-                        {canViewDetail && (
-                          <td className="px-4 py-3">
-                            <Link
-                              to={`/students/${s.student_id}`}
-                              className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
-                            >
-                              View Profile →
-                            </Link>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-surface-border text-xs text-txt-muted bg-surface-bg">
-              <span>{total.toLocaleString()} total</span>
-              <div className="flex items-center gap-3">
+          {/* Pagination */}
+          {!loading && students.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-surface-border text-xs text-txt-muted bg-gray-50">
+              <span>{count.toLocaleString()} students</span>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={prevPage}
                   disabled={page <= 1}
@@ -139,7 +180,7 @@ export default function StudentTable() {
                 >
                   ← Prev
                 </button>
-                <span className="font-medium">Page {page} of {totalPages}</span>
+                <span className="font-medium px-1">Page {page} of {totalPages}</span>
                 <button
                   onClick={nextPage}
                   disabled={page >= totalPages}
@@ -149,24 +190,9 @@ export default function StudentTable() {
                 </button>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
-}
-
-function buildCSVRows(students) {
-  return [
-    ['Student ID', 'Name', 'School', 'Grade', 'Absence %', 'Risk', 'Intervention'],
-    ...students.map((s) => [
-      s.student_id,
-      s.name ?? `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim(),
-      s.school_name ?? s.school ?? '',
-      s.grade,
-      fmt.pct(s.absence_rate ?? 0),
-      riskLabel(s.absence_rate ?? 0),
-      s.intervention_status ?? 'None',
-    ]),
-  ];
 }

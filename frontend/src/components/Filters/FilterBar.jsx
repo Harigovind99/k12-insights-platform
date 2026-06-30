@@ -10,186 +10,144 @@ import {
 import { downloadCSV } from '@/utils/helpers';
 
 /**
- * FilterBar — configurable filter row.
+ * FilterBar — sticky row with label-above-select style matching the original prototype.
  * Props:
- *   show         string[]  - which filter keys to display (empty = show all)
- *   data         any       - data to export via CSV (optional)
- *   csvFilename  string    - filename for CSV export
+ *   show         string[]  – which filter keys to render; empty = all
+ *   data         any       – passed to CSV export
+ *   csvFilename  string
+ *   loading      bool      – shows animated dots while data is loading
  */
-export default function FilterBar({ show = [], data, csvFilename = 'export.csv' }) {
+export default function FilterBar({ show = [], data, csvFilename = 'export.csv', loading = false }) {
   const f = useFilters();
-  const { schools } = useSchools();   // fetched from /api/schools — live DASL list
+  const { schools } = useSchools();
 
   const visible = (key) => show.length === 0 || show.includes(key);
 
+  function LabeledSelect({ label, value, onChange, children }) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs text-txt-muted font-medium px-0.5">{label}</span>
+        <select value={value} onChange={onChange} className="filter-select">
+          {children}
+        </select>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-5">
-
-      {/* School Year */}
+    <div
+      className="sticky top-0 z-30 bg-surface-card border-b border-surface-border
+                 px-6 py-3 flex flex-wrap items-end gap-3 shadow-sm"
+    >
       {visible('schoolYear') && (
-        <select
-          value={f.filters.schoolYear}
-          onChange={(e) => f.setSchoolYear(e.target.value)}
-          className="filter-select"
-        >
+        <LabeledSelect label="School Year" value={f.filters.schoolYear} onChange={(e) => f.setSchoolYear(e.target.value)}>
           {SCHOOL_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
+        </LabeledSelect>
       )}
 
-      {/* School — populated from live API */}
       {visible('school') && (
-        <select
-          value={f.filters.school}
-          onChange={(e) => f.setSchool(e.target.value)}
-          className="filter-select"
-        >
-          {schools.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        <LabeledSelect label="School" value={f.filters.school} onChange={(e) => f.setSchool(e.target.value)}>
+          {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Grade */}
       {visible('grade') && (
-        <select
-          value={f.filters.grade}
-          onChange={(e) => f.setGrade(e.target.value)}
-          className="filter-select"
-        >
-          {GRADES.map((g) => (
-            <option key={g} value={g}>{g === 'all' ? 'All Grades' : `Grade ${g}`}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Grade" value={f.filters.grade} onChange={(e) => f.setGrade(e.target.value)}>
+          {GRADES.map((g) => <option key={g} value={g}>{g === 'all' ? 'All Grades' : `Grade ${g}`}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Student Group */}
       {visible('group') && (
-        <select
-          value={f.filters.group}
-          onChange={(e) => f.setGroup(e.target.value)}
-          className="filter-select"
-        >
-          {STUDENT_GROUPS.map((g) => (
-            <option key={g.id} value={g.id}>{g.label}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Student Group" value={f.filters.group} onChange={(e) => f.setGroup(e.target.value)}>
+          {STUDENT_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Absence Type */}
       {visible('absenceType') && (
-        <select
-          value={f.filters.absenceType}
-          onChange={(e) => f.setAbsenceType(e.target.value)}
-          className="filter-select"
-        >
-          {ABSENCE_TYPES.map((a) => (
-            <option key={a.id} value={a.id}>{a.label}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Absence Type" value={f.filters.absenceType} onChange={(e) => f.setAbsenceType(e.target.value)}>
+          {ABSENCE_TYPES.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Month */}
       {visible('month') && (
-        <select
-          value={f.filters.month}
-          onChange={(e) => f.setMonth(e.target.value)}
-          className="filter-select"
-        >
-          {MONTHS.map((m) => (
-            <option key={m} value={m}>{m === 'all' ? 'All Months' : m}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Month" value={f.filters.month} onChange={(e) => f.setMonth(e.target.value)}>
+          {MONTHS.map((m) => <option key={m} value={m}>{m === 'all' ? 'All Months' : m}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Quarter */}
       {visible('quarter') && (
-        <select
-          value={f.filters.quarter}
-          onChange={(e) => f.setQuarter(e.target.value)}
-          className="filter-select"
-        >
-          {QUARTERS.map((q) => (
-            <option key={q} value={q}>{q === 'all' ? 'All Quarters' : q}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Quarter" value={f.filters.quarter} onChange={(e) => f.setQuarter(e.target.value)}>
+          {QUARTERS.map((q) => <option key={q} value={q}>{q === 'all' ? 'All Quarters' : q}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Risk Level */}
       {visible('riskLevel') && (
-        <select
-          value={f.filters.riskLevel}
-          onChange={(e) => f.setRiskLevel(e.target.value)}
-          className="filter-select"
-        >
-          {RISK_LEVELS.map((r) => (
-            <option key={r.id} value={r.id}>{r.label}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Risk Level" value={f.filters.riskLevel} onChange={(e) => f.setRiskLevel(e.target.value)}>
+          {RISK_LEVELS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Intervention Status */}
       {visible('interventionStatus') && (
-        <select
-          value={f.filters.interventionStatus}
-          onChange={(e) => f.setInterventionStatus(e.target.value)}
-          className="filter-select"
-        >
-          {INTERVENTION_STATUSES.map((s) => (
-            <option key={s.id} value={s.id}>{s.label}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Intervention" value={f.filters.interventionStatus} onChange={(e) => f.setInterventionStatus(e.target.value)}>
+          {INTERVENTION_STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Assessment Subject */}
       {visible('assessmentSubject') && (
-        <select
-          value={f.filters.assessmentSubject}
-          onChange={(e) => f.setAssessmentSubject(e.target.value)}
-          className="filter-select"
-        >
-          {ASSESSMENT_SUBJECTS.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+        <LabeledSelect label="Subject" value={f.filters.assessmentSubject} onChange={(e) => f.setAssessmentSubject(e.target.value)}>
+          {ASSESSMENT_SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
+        </LabeledSelect>
       )}
 
-      {/* Search */}
       {visible('search') && (
-        <input
-          type="search"
-          value={f.filters.search}
-          onChange={(e) => f.setSearch(e.target.value)}
-          placeholder="Search students…"
-          className="filter-select pl-3 w-44"
-        />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-xs text-txt-muted font-medium px-0.5">Search</span>
+          <input
+            type="search"
+            value={f.filters.search}
+            onChange={(e) => f.setSearch(e.target.value)}
+            placeholder="Search students…"
+            className="filter-select pl-3 w-44"
+          />
+        </div>
+      )}
+
+      {/* Loading indicator */}
+      {loading && (
+        <div className="flex items-end gap-0.5 pb-2">
+          <span className="loading-dot" />
+          <span className="loading-dot" />
+          <span className="loading-dot" />
+        </div>
       )}
 
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Reset */}
-      {f.isDirty && (
+      {/* Action buttons */}
+      <div className="flex items-end gap-2 pb-0">
+        {f.isDirty && (
+          <button
+            onClick={f.resetFilters}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-txt-muted
+                       border border-surface-border rounded-lg hover:border-danger
+                       hover:text-danger transition-colors"
+          >
+            <RotateCcw size={13} />
+            Reset
+          </button>
+        )}
         <button
-          onClick={f.resetFilters}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-txt-muted hover:text-danger
-                     border border-surface-border rounded-lg hover:border-danger transition-colors"
-        >
-          <RotateCcw size={13} />
-          Reset
-        </button>
-      )}
-
-      {/* CSV Export */}
-      {data && (
-        <button
-          onClick={() => downloadCSV(data, csvFilename)}
+          onClick={() => data && downloadCSV(data, csvFilename)}
+          disabled={!data}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-                     bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
+                     bg-brand-600 text-white rounded-lg hover:bg-brand-700
+                     disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <Download size={13} />
-          Export CSV
+          Download CSV
         </button>
-      )}
+      </div>
     </div>
   );
 }

@@ -28,3 +28,7 @@ router.get('/chronic',    ctrl.getChronicAbsentees);
 router.get('/risk',       ctrl.getRiskDistribution);
 
 module.exports = router;
+
+router.get('/', (req, res) => {
+  res.json({ message: "Attendance API is working" });
+});

@@ -9,8 +9,6 @@ import { setNavigate }    from '@/api/routerNavigate';
 
 // ─── Lazy-loaded route pages ──────────────────────────────────────────────────
 const AttendanceDashboard = lazy(() => import('@/components/Dashboard/AttendanceDashboard'));
-const QuarterlyDashboard  = lazy(() => import('@/components/Dashboard/QuarterlyDashboard'));
-const ChronicDashboard    = lazy(() => import('@/components/Dashboard/ChronicDashboard'));
 const TruancyDashboard    = lazy(() => import('@/components/Dashboard/TruancyDashboard'));
 const StudentTable        = lazy(() => import('@/components/Student/StudentTable'));
 const StudentProfile      = lazy(() => import('@/components/Student/StudentProfile'));
@@ -67,10 +65,10 @@ export default function App() {
                 {/* Default redirect */}
                 <Route path="/"                              element={<Navigate to="/insights/attendance" replace />} />
 
-                {/* Attendance */}
+                {/* Attendance — quarterly & chronic are now sub-tabs inside AttendanceDashboard */}
                 <Route path="/insights/attendance"           element={<AttendanceDashboard />} />
-                <Route path="/insights/attendance/quarterly" element={<QuarterlyDashboard />} />
-                <Route path="/insights/attendance/chronic"   element={<ChronicDashboard />} />
+                <Route path="/insights/attendance/quarterly" element={<Navigate to="/insights/attendance" replace />} />
+                <Route path="/insights/attendance/chronic"   element={<Navigate to="/insights/attendance" replace />} />
 
                 {/* Assessments */}
                 <Route path="/insights/assessments"          element={<ComingSoon domain="Assessments" />} />
