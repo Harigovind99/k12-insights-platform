@@ -13,7 +13,8 @@ export default defineConfig({
     // This eliminates CORS errors during local development.
     proxy: {
       '/api': {
-        target:       'http://localhost:5000',
+        // Overridden to http://backend:5000 when running via docker-compose
+        target:       process.env.VITE_PROXY_TARGET || 'http://localhost:5000',
         changeOrigin: true,
         secure:       false,
       },
