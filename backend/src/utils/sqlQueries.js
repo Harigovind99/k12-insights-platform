@@ -12,6 +12,17 @@ function absenceTypeCol(absenceType) {
   return ABSENCE_TYPE_COL[absenceType] || 'AbsenceDays';
 }
 
+// ─── Grade filter normalization ──────────────────────────────────────────────
+// s.GradeLevelName stores single-digit grades zero-padded ("01"-"09") and
+// kindergarten as "KG", but the frontend filter sends "K"/"1"-"9". 10/11/12
+// pass through unchanged since they're already two digits.
+function normalizeGradeFilter(grade) {
+  if (!grade || grade === 'all') return grade;
+  if (grade === 'K') return 'KG';
+  if (/^[1-9]$/.test(grade)) return `0${grade}`;
+  return grade;
+}
+
 // ─── School filter subquery (monthly/daily tables) ────────────────────────────
 function schoolFilterSubquery() {
   return `
@@ -225,6 +236,7 @@ function buildSchoolBreakdownQuery({ school, grade, absenceType, group, month } 
         SUM(atm.${mCol})                                                            AS TotalAbsenceDays,
         SUM(atm.ExcusedAbsenceDays)                                                 AS ExcusedDays,
         SUM(atm.UnexcusedAbsenceDays)                                               AS UnexcusedDays,
+        SUM(atm.NumberOfTimesTardy)                                                 AS TotalTardy,
         NULL                                                                         AS TotalSchoolDays,
         NULL                                                                         AS AbsenceRate,
         NULL                                                                         AS ChronicCount
@@ -257,6 +269,7 @@ function buildSchoolBreakdownQuery({ school, grade, absenceType, group, month } 
       SUM(aty.${absCol})                                                          AS TotalAbsenceDays,
       SUM(aty.ExcusedAbsenceDays)                                                 AS ExcusedDays,
       SUM(aty.UnexcusedAbsenceDays)                                               AS UnexcusedDays,
+      SUM(aty.NumberOfTimesTardy)                                                 AS TotalTardy,
       SUM(aty.SchoolDays)                                                         AS TotalSchoolDays,
       CASE WHEN SUM(aty.SchoolDays) > 0
            THEN CAST(SUM(aty.${absCol}) * 100.0 / SUM(aty.SchoolDays) AS DECIMAL(5,2))
@@ -792,4 +805,5 @@ module.exports = {
   buildAssessmentListQuery,
   buildGradeLevelListQuery,
   buildAssessmentResultsQuery,
+  normalizeGradeFilter,
 };

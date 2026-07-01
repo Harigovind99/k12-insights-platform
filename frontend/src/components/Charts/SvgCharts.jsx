@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 // ── Shared tooltip hook ──────────────────────────────────────────────────────
 function useTip() {
@@ -10,15 +11,45 @@ function useTip() {
 }
 
 function Tooltip({ tip }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState(null);
+
+  // Measure the rendered box so it can hug the cursor exactly, flipping to
+  // the other side only when it would actually overflow the viewport.
+  useLayoutEffect(() => {
+    if (!tip || !ref.current) { setPos(null); return; }
+    const offset = 14;
+    const { width, height } = ref.current.getBoundingClientRect();
+    let left = tip.x + offset;
+    let top  = tip.y + offset;
+    if (left + width  > window.innerWidth)  left = tip.x - width - offset;
+    if (top  + height > window.innerHeight) top  = tip.y - height - offset;
+    setPos({ left, top });
+  }, [tip]);
+
   if (!tip) return null;
   const lines = tip.html.split('\n');
-  return (
+
+  // Rendered via portal so a transformed/animated ancestor (e.g. the
+  // fade-in animation on scrollable dashboard panels) can't turn into the
+  // containing block for this fixed-position box and throw off its
+  // viewport-relative coordinates.
+  return createPortal(
     <div
+      ref={ref}
       className="tooltip-box"
-      style={{ position:'fixed', left: tip.x - 80, top: tip.y - 60, zIndex: 9999, pointerEvents:'none' }}
+      style={{
+        position: 'fixed',
+        left: pos ? pos.left : tip.x,
+        top: pos ? pos.top : tip.y,
+        visibility: pos ? 'visible' : 'hidden',
+        zIndex: 9999,
+        pointerEvents: 'none',
+      }}
     >
       {lines.map((l, i) => <div key={i}>{l}</div>)}
-    </div>
+    </div>,
+    document.body
   );
 }
 

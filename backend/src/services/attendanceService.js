@@ -11,6 +11,7 @@ const {
   buildRiskDistributionQuery,
   buildQuarterlyRiskQuery,
   buildTruancyListQuery,
+  normalizeGradeFilter,
 } = require('../utils/sqlQueries');
 
 // Maps the 3-letter month abbreviation from the frontend to a SQL month number.
@@ -40,7 +41,7 @@ function bindFilters(request, { schoolYearId, schoolYear, school, grade, thresho
   if (schoolYear) request.input('schoolYear', sql.NVarChar, schoolYear);
 
   if (school && school !== 'all') request.input('school',    sql.NVarChar,      school);
-  if (grade  && grade  !== 'all') request.input('grade',     sql.NVarChar,      grade);
+  if (grade  && grade  !== 'all') request.input('grade',     sql.NVarChar,      normalizeGradeFilter(grade));
   if (threshold != null)          request.input('threshold', sql.Decimal(5, 2), Number(threshold));
 
   // @month is the numeric month (1–12) used by trend and DOW queries.

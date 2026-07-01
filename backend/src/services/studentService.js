@@ -14,6 +14,7 @@ const {
   buildGradeLevelListQuery,
   buildAssessmentResultsQuery,
   buildStudentAbsenceCalendarQuery,
+  normalizeGradeFilter,
 } = require('../utils/sqlQueries');
 const { resolveSchoolYearId } = require('../utils/yearResolver');
 const logger = require('../utils/logger');
@@ -47,7 +48,7 @@ async function getStudents(filters = {}) {
     request.input('school', sql.NVarChar, filters.school);
   }
   if (filters.grade && filters.grade !== 'all') {
-    request.input('grade', sql.NVarChar, filters.grade);
+    request.input('grade', sql.NVarChar, normalizeGradeFilter(filters.grade));
   }
   if (filters.search) {
     request.input('search', sql.NVarChar, `%${filters.search}%`);

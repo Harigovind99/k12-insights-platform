@@ -37,7 +37,7 @@ function toSchoolChartData(schoolData) {
     const abs   = s.TotalAbsenceDays || 0;
     const exc   = s.ExcusedDays      || 0;
     const unex  = s.UnexcusedDays    || 0;
-    const tardy = Math.max(0, abs - exc - unex);
+    const tardy = s.TotalTardy       || 0;
     return {
       school:    s.SchoolName || 'Unknown',
       present:   Math.max(0, parseFloat(((total - abs) / total * 100).toFixed(1))),
@@ -57,7 +57,7 @@ function toAbsenceTypeData(summary) {
   const excP = Math.round(exc  / tot * 100);
   const unxP = Math.round(unex / tot * 100);
   return [
-    { label:'Excused',   pct: excP,              count: exc,  color:'#3b82f6' },
+    { label:'Excused',   pct: excP,              count: exc,  color:'#f59e0b' },
     { label:'Unexcused', pct: unxP,              count: unex, color:'#ef4444' },
     { label:'Tardy',     pct: Math.max(0,100-excP-unxP), count: tardy, color:'#8b5cf6' },
   ];
@@ -116,10 +116,18 @@ export default function AttendanceDashboard() {
   const error   = mError || aError;
 
   // ── Derived KPI values ───────────────────────────────────────────────────
-  const attendanceRate  = summary ? parseFloat((100 - (summary.AvgAbsenceRate || 0)).toFixed(1)) : 0;
+  // The monthly attendance table has no "school days in session" column, so
+  // AvgAbsenceRate/ChronicAbsentCount come back NULL from the backend for a
+  // single-month filter (see buildAttendanceSummaryQuery). Avg days absent is
+  // also monthly-only data whose "Chronic"/"At-Risk" badge thresholds are
+  // calibrated for a full year, so all three are shown as N/A rather than a
+  // misleading 100% / 0 / mismatched badge.
+  const monthSelected   = !!(filters.month && filters.month !== 'all');
   const totalStudents   = summary?.TotalStudents   || 0;
-  const chronicCount    = summary?.ChronicAbsentCount || 0;
-  const avgDaysAbsent   = totalStudents > 0 ? parseFloat(((summary?.TotalAbsenceDays || 0) / totalStudents).toFixed(1)) : 0;
+  const attendanceRate  = monthSelected ? null : (summary ? parseFloat((100 - (summary.AvgAbsenceRate || 0)).toFixed(1)) : 0);
+  const chronicCount    = monthSelected ? null : (summary?.ChronicAbsentCount || 0);
+  const avgDaysAbsent   = monthSelected ? null : (totalStudents > 0 ? parseFloat(((summary?.TotalAbsenceDays || 0) / totalStudents).toFixed(1)) : 0);
+  const naSub           = 'Not available for single-month view';
 
   const onTrackCount    = riskDist?.OnTrack  || 0;
   const moderateCount   = riskDist?.Moderate || 0;
@@ -210,10 +218,10 @@ export default function AttendanceDashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <KPICard
                 label="Overall Attendance Rate"
-                value={attendanceRate}
-                suffix="%"
-                sub={`District avg · Goal: 96%`}
-                badge={badgeText}
+                value={monthSelected ? '—' : attendanceRate}
+                suffix={monthSelected ? '' : '%'}
+                sub={monthSelected ? naSub : `District avg · Goal: 96%`}
+                badge={monthSelected ? null : badgeText}
                 badgeColor={badgeColor}
                 loading={loading}
               />
@@ -227,18 +235,18 @@ export default function AttendanceDashboard() {
               />
               <KPICard
                 label="Chronically Absent"
-                value={chronicCount}
-                sub={`${pctFmt((chronicCount / (totalStudents || 1)) * 100)} of students`}
-                badge="↓ Monitor"
+                value={monthSelected ? '—' : chronicCount}
+                sub={monthSelected ? naSub : `${pctFmt((chronicCount / (totalStudents || 1)) * 100)} of students`}
+                badge={monthSelected ? null : '↓ Monitor'}
                 badgeColor={chronicCount / (totalStudents || 1) >= 0.10 ? 'red' : 'yellow'}
                 loading={loading}
               />
               <KPICard
                 label="Avg Days Absent"
-                value={avgDaysAbsent}
-                suffix=" days"
-                sub="per student this year"
-                badge={avgDaysAbsent >= 18 ? '↓ Chronic' : avgDaysAbsent >= 9 ? '⚠ At-Risk' : '↑ On Track'}
+                value={monthSelected ? '—' : avgDaysAbsent}
+                suffix={monthSelected ? '' : ' days'}
+                sub={monthSelected ? naSub : 'per student this year'}
+                badge={monthSelected ? null : (avgDaysAbsent >= 18 ? '↓ Chronic' : avgDaysAbsent >= 9 ? '⚠ At-Risk' : '↑ On Track')}
                 badgeColor={avgDaysAbsent >= 18 ? 'red' : avgDaysAbsent >= 9 ? 'yellow' : 'green'}
                 loading={loading}
               />
@@ -397,35 +405,35 @@ export default function AttendanceDashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <KPICard
                 label="Chronically Absent"
-                value={chronicCount}
-                sub="≥ 10% days missed"
-                badge="≥ 10%"
+                value={monthSelected ? '—' : chronicCount}
+                sub={monthSelected ? naSub : '≥ 10% days missed'}
+                badge={monthSelected ? null : '≥ 10%'}
                 badgeColor="red"
                 loading={loading}
               />
               <KPICard
                 label="Chronic Rate"
-                value={parseFloat((chronicCount / (totalStudents || 1) * 100).toFixed(1))}
-                suffix="%"
-                sub="district-wide"
-                badge={chronicCount/(totalStudents||1)>=0.20 ? '↓ Critical' : chronicCount/(totalStudents||1)>=0.10 ? '↓ Monitor' : '↑ On Track'}
+                value={monthSelected ? '—' : parseFloat((chronicCount / (totalStudents || 1) * 100).toFixed(1))}
+                suffix={monthSelected ? '' : '%'}
+                sub={monthSelected ? naSub : 'district-wide'}
+                badge={monthSelected ? null : (chronicCount/(totalStudents||1)>=0.20 ? '↓ Critical' : chronicCount/(totalStudents||1)>=0.10 ? '↓ Monitor' : '↑ On Track')}
                 badgeColor={chronicCount/(totalStudents||1)>=0.20 ? 'red' : 'yellow'}
                 loading={loading}
               />
               <KPICard
                 label="Total Absence Days"
                 value={summary?.TotalAbsenceDays || 0}
-                sub="this school year"
+                sub={monthSelected ? 'this month' : 'this school year'}
                 badge="All Types"
                 badgeColor="blue"
                 loading={loading}
               />
               <KPICard
                 label="Avg Days Absent"
-                value={avgDaysAbsent}
-                suffix=" days"
-                sub="per student"
-                badge={avgDaysAbsent >= 18 ? '↓ Chronic' : '⚠ Watch'}
+                value={monthSelected ? '—' : avgDaysAbsent}
+                suffix={monthSelected ? '' : ' days'}
+                sub={monthSelected ? naSub : 'per student'}
+                badge={monthSelected ? null : (avgDaysAbsent >= 18 ? '↓ Chronic' : '⚠ Watch')}
                 badgeColor={avgDaysAbsent >= 18 ? 'red' : 'yellow'}
                 loading={loading}
               />

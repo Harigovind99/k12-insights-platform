@@ -29,11 +29,11 @@ export default function FilterBar({ show = [], data, csvFilename = 'export.csv',
 
   const visible = (key) => show.length === 0 || show.includes(key);
 
-  function LabeledSelect({ label, value, onChange, children }) {
+  function LabeledSelect({ label, value, onChange, children, className = '', title }) {
     return (
       <div className="flex flex-col gap-0.5 shrink-0">
         <span className="text-xs text-txt-muted font-medium px-0.5">{label}</span>
-        <select value={value} onChange={onChange} className="filter-select">
+        <select value={value} onChange={onChange} className={`filter-select ${className}`} title={title}>
           {children}
         </select>
       </div>
@@ -52,7 +52,13 @@ export default function FilterBar({ show = [], data, csvFilename = 'export.csv',
       )}
 
       {visible('school') && (
-        <LabeledSelect label="School" value={f.filters.school} onChange={(e) => f.setSchool(e.target.value)}>
+        <LabeledSelect
+          label="School"
+          value={f.filters.school}
+          onChange={(e) => f.setSchool(e.target.value)}
+          className="max-w-[200px] truncate"
+          title={schools.find((s) => s.id === f.filters.school)?.name}
+        >
           {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </LabeledSelect>
       )}
