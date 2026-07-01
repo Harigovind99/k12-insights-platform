@@ -31,8 +31,9 @@ export function useSchools() {
         // Backend returns { data: [...] } or array directly
         const raw = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
         // Normalise to { id, name }
+        // Use SchoolName as the filter value because all SQL queries compare sch.SchoolName = @school
         const list = raw.map((s) => ({
-          id:   s.SchoolId ?? s.id   ?? s.schoolId,
+          id:   s.SchoolName ?? s.name ?? s.schoolName ?? '(unknown)',
           name: s.SchoolName ?? s.name ?? s.schoolName ?? '(unknown)',
         }));
         const withAll = [{ id: 'all', name: 'All Schools' }, ...list];

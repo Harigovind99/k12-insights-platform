@@ -9,6 +9,12 @@ import {
 } from '@/utils/constants';
 import { downloadCSV } from '@/utils/helpers';
 
+const MONTH_FULL = {
+  all: 'All Months',
+  Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December',
+  Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June',
+};
+
 /**
  * FilterBar — sticky row with label-above-select style matching the original prototype.
  * Props:
@@ -25,7 +31,7 @@ export default function FilterBar({ show = [], data, csvFilename = 'export.csv',
 
   function LabeledSelect({ label, value, onChange, children }) {
     return (
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-0.5 shrink-0">
         <span className="text-xs text-txt-muted font-medium px-0.5">{label}</span>
         <select value={value} onChange={onChange} className="filter-select">
           {children}
@@ -71,7 +77,9 @@ export default function FilterBar({ show = [], data, csvFilename = 'export.csv',
 
       {visible('month') && (
         <LabeledSelect label="Month" value={f.filters.month} onChange={(e) => f.setMonth(e.target.value)}>
-          {MONTHS.map((m) => <option key={m} value={m}>{m === 'all' ? 'All Months' : m}</option>)}
+          {MONTHS.map((m) => (
+            <option key={m} value={m}>{MONTH_FULL[m] ?? m}</option>
+          ))}
         </LabeledSelect>
       )}
 

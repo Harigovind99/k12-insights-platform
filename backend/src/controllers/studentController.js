@@ -8,23 +8,25 @@
 const studentService      = require('../services/studentService');
 const interventionService = require('../services/interventionService');
 
-// GET /api/students?schoolYear=...&schoolName=...&gradeLevel=...&search=...&limit=100&offset=0
+// GET /api/students?schoolYear=...&school=...&grade=...&search=...&riskLevel=...&limit=100&offset=0
 async function getStudents(req, res, next) {
   try {
     const {
       schoolYear,
-      schoolName,
-      gradeLevel,
+      school,
+      grade,
       search,
+      riskLevel,
       limit  = 100,
       offset = 0,
     } = req.query;
 
     const data = await studentService.getStudents({
       schoolYear,
-      schoolName,
-      gradeLevel,
+      school,
+      grade,
       search,
+      riskLevel,
       limit:  parseInt(limit,  10),
       offset: parseInt(offset, 10),
     });

@@ -30,18 +30,21 @@ function secFmt(n)  { return n != null ? Number(n).toFixed(1) : '—'; }
 
 function toSchoolChartData(schoolData) {
   return (schoolData || []).map(s => {
-    const total  = s.TotalSchoolDays || 1;
-    const abs    = s.TotalAbsenceDays || 0;
-    const exc    = s.ExcusedDays  || 0;
-    const unex   = s.UnexcusedDays || 0;
-    const tardy  = Math.max(0, abs - exc - unex);
+    const students = s.StudentCount || 0;
+    // TotalSchoolDays is NULL when SchoolDays is unpopulated in the DB; fall back
+    // to StudentCount × 180 (standard US school year) so the chart still renders.
+    const total = s.TotalSchoolDays > 0 ? s.TotalSchoolDays : students * 180 || 1;
+    const abs   = s.TotalAbsenceDays || 0;
+    const exc   = s.ExcusedDays      || 0;
+    const unex  = s.UnexcusedDays    || 0;
+    const tardy = Math.max(0, abs - exc - unex);
     return {
       school:    s.SchoolName || 'Unknown',
-      present:   parseFloat(((total - abs) / total * 100).toFixed(1)),
-      excused:   parseFloat((exc  / total * 100).toFixed(1)),
-      unexcused: parseFloat((unex / total * 100).toFixed(1)),
+      present:   Math.max(0, parseFloat(((total - abs) / total * 100).toFixed(1))),
+      excused:   parseFloat((exc   / total * 100).toFixed(1)),
+      unexcused: parseFloat((unex  / total * 100).toFixed(1)),
       tardy:     parseFloat((tardy / total * 100).toFixed(1)),
-      total:     s.StudentCount || 0,
+      total:     students,
     };
   });
 }

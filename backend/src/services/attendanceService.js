@@ -13,9 +13,15 @@ const {
   buildTruancyListQuery,
 } = require('../utils/sqlQueries');
 
+// Maps the 3-letter month abbreviation from the frontend to a SQL month number.
+const MONTH_NAME_TO_NUM = {
+  Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12,
+  Jan: 1, Feb: 2, Mar: 3,  Apr: 4,  May: 5,  Jun: 6,
+};
+
 // Bind common filter params. @schoolYearId is the pre-resolved GUID so SQL
 // never needs the expensive CoreReports.AttendanceLetter subquery.
-function bindFilters(request, { schoolYearId, schoolYear, school, grade, threshold } = {}) {
+function bindFilters(request, { schoolYearId, schoolYear, school, grade, threshold, month } = {}) {
   const sql = require('mssql');
 
   request.input('schoolYearId', sql.UniqueIdentifier, schoolYearId || null);
@@ -30,9 +36,18 @@ function bindFilters(request, { schoolYearId, schoolYear, school, grade, thresho
     request.input('endYear',   sql.Int, null);
   }
 
+  // @schoolYear as varchar used by demographic subqueries (EL, homeless, foster).
+  if (schoolYear) request.input('schoolYear', sql.NVarChar, schoolYear);
+
   if (school && school !== 'all') request.input('school',    sql.NVarChar,      school);
   if (grade  && grade  !== 'all') request.input('grade',     sql.NVarChar,      grade);
   if (threshold != null)          request.input('threshold', sql.Decimal(5, 2), Number(threshold));
+
+  // @month is the numeric month (1–12) used by trend and DOW queries.
+  if (month && month !== 'all') {
+    const monthNum = MONTH_NAME_TO_NUM[month];
+    if (monthNum) request.input('month', sql.Int, monthNum);
+  }
 }
 
 // ─── Attendance Summary (KPI cards) ──────────────────────────────────────────

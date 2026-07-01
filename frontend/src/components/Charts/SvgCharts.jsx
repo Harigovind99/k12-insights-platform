@@ -49,7 +49,7 @@ export function StackedHBarChart({ data = [], w = 540, h = 220 }) {
   const { tip, show, move, hide } = useTip();
   if (!data.length) return <EmptyChart height={h} />;
 
-  const margin = { t:10, r:20, b:40, l:140 };
+  const margin = { t:10, r:20, b:40, l:160 };
   const cw = w - margin.l - margin.r;
   const ch = h - margin.t - margin.b;
   const barH = Math.min(28, ch / data.length - 6);
@@ -62,8 +62,8 @@ export function StackedHBarChart({ data = [], w = 540, h = 220 }) {
   ];
 
   return (
-    <div>
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ overflow:'visible' }}>
+    <div className="overflow-hidden">
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ overflow: 'hidden' }}>
         {data.map((d, i) => {
           const y = margin.t + i * (ch / data.length) + (ch / data.length - barH) / 2;
           const lbl = d.school?.length > 18 ? d.school.slice(0, 16) + '…' : (d.school || '');

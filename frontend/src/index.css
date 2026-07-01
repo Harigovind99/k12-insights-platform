@@ -109,6 +109,9 @@
     background-position: right 8px center;
     cursor: pointer;
     min-width: 120px;
+    text-align-last: left;
+    direction: ltr;
+    white-space: nowrap;
   }
   .filter-select:focus {
     outline: none;

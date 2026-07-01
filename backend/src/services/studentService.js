@@ -15,6 +15,7 @@ const {
   buildAssessmentResultsQuery,
   buildStudentAbsenceCalendarQuery,
 } = require('../utils/sqlQueries');
+const { resolveSchoolYearId } = require('../utils/yearResolver');
 const logger = require('../utils/logger');
 
 // ── Helper: bind named params to a mssql request ─────────────────────────────
@@ -36,11 +37,21 @@ function bindParams(request, params = {}) {
 //  getStudents – paged student roster with absence totals
 // ─────────────────────────────────────────────────────────────────────────────
 async function getStudents(filters = {}) {
-  const pool = await getPool();
-  const { query, params } = buildStudentListQuery(filters);
+  const pool         = await getPool();
+  const schoolYearId = await resolveSchoolYearId(filters.schoolYear);
+  const query        = buildStudentListQuery(filters);
 
   const request = pool.request();
-  bindParams(request, params);
+  request.input('schoolYearId', sql.UniqueIdentifier, schoolYearId);
+  if (filters.school && filters.school !== 'all') {
+    request.input('school', sql.NVarChar, filters.school);
+  }
+  if (filters.grade && filters.grade !== 'all') {
+    request.input('grade', sql.NVarChar, filters.grade);
+  }
+  if (filters.search) {
+    request.input('search', sql.NVarChar, `%${filters.search}%`);
+  }
 
   logger.debug('studentService.getStudents', { filters });
   const result = await request.query(query);
